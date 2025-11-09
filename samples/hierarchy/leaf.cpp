@@ -24,17 +24,15 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() {},
+      []() { Info() << "Leaf: OnEntry\n"
+                    << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Leaf: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
-          {"",
-           [&](const Address& sender, std::istream& args) {
-             std::ostringstream os;
-             os << args.rdbuf();
-             Info() << "Leaf: " << os.str() << '\n' << std::flush;
-           }},
+          {"exit",
+           [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));
 
   m.Start();

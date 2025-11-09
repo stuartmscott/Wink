@@ -28,8 +28,8 @@ int main(int argc, char** argv) {
       [&]() {
         Info() << "Parent: OnEntry\n" << std::flush;
         // Spawn two identical children, differentiated by a tag
-        m.Spawn("family/Child:Alice");
-        m.Spawn("family/Child:Bob");
+        m.Spawn("family/Child#Alice");
+        m.Spawn("family/Child#Bob");
       },
       // On Exit Action
       []() { Info() << "Parent: OnExit\n"

@@ -28,11 +28,13 @@ int main(int argc, char** argv) {
       "",
       // On Entry Action
       [&]() {
+        Info() << "main: OnEntry\n" << std::flush;
         // Schedule message to be sent to self after 10s
         m.SendAfter(address, "error", std::chrono::seconds(10));
       },
       // On Exit Action
-      []() {},
+      []() { Info() << "main: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
           {"error", [&](const Address& sender,

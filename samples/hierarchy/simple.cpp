@@ -25,17 +25,21 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() {},
+      []() { Info() << "Parent: OnEntry\n"
+                    << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Parent: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
-          {"",
+          {"goto",
            [&](const Address& sender, std::istream& args) {
-             std::ostringstream os;
-             os << args.rdbuf();
-             Info() << "Parent: " << os.str() << '\n' << std::flush;
+             std::string s;
+             args >> s;
+             m.Transition(s);
            }},
+          {"exit",
+           [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));
 
   m.AddState(std::make_unique<State>(
@@ -44,19 +48,13 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent",
       // On Entry Action
-      []() { Info() << "Leaf1 On Entry\n"
+      []() { Info() << "Leaf1: OnEntry\n"
                     << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Leaf1: OnExit\n"
+                    << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
-          {"Test",
-           [&](const Address& sender, std::istream& args) {
-             std::ostringstream os;
-             os << args.rdbuf();
-             Info() << "Leaf1: " << os.str() << '\n' << std::flush;
-           }},
-      }));
+      std::map<const std::string, Receiver>{}));
 
   m.AddState(std::make_unique<State>(
       // State Name
@@ -64,19 +62,13 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent",
       // On Entry Action
-      []() { Info() << "Leaf2 On Entry\n"
+      []() { Info() << "Leaf2: OnEntry\n"
                     << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Leaf2: OnExit\n"
+                    << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
-          {"Test",
-           [&](const Address& sender, std::istream& args) {
-             std::ostringstream os;
-             os << args.rdbuf();
-             Info() << "Leaf2: " << os.str() << '\n' << std::flush;
-           }},
-      }));
+      std::map<const std::string, Receiver>{}));
 
   m.Start("Leaf2");
 }

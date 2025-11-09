@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
       "",
       // On Entry Action
       [&]() {
+        Info() << "main: OnEntry\n" << std::flush;
         // Send message to subscribe to publisher
         m.Send(publisher, "subscribe");
         // Schedule message to unsubscribe from publisher after 10s
@@ -38,7 +39,8 @@ int main(int argc, char** argv) {
         m.SendAfter(address, "exit", std::chrono::seconds(15));
       },
       // On Exit Action
-      []() {},
+      []() { Info() << "main: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
           {"update",

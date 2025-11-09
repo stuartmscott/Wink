@@ -24,11 +24,15 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() {},
+      []() { Info() << "Parent: OnEntry\n"
+                    << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Parent: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
+          {"exit",
+           [&](const Address& sender, std::istream& args) { m.Exit(); }},
           {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
@@ -43,13 +47,16 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent",
       // On Entry Action
-      []() { Info() << "Leaf1 On Entry\n"
+      []() { Info() << "Leaf1: OnEntry\n"
                     << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Leaf1: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
-          {"Test",
+          {"exit",
+           [&](const Address& sender, std::istream& args) { m.Exit(); }},
+          {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
@@ -63,13 +70,16 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent",
       // On Entry Action
-      []() { Info() << "Child1 On Entry\n"
+      []() { Info() << "Child1: OnEntry\n"
                     << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Child1: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
-          {"Test",
+          {"exit",
+           [&](const Address& sender, std::istream& args) { m.Exit(); }},
+          {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
@@ -83,13 +93,16 @@ int main(int argc, char** argv) {
       // Parent State
       "Child1",
       // On Entry Action
-      []() { Info() << "Leaf2 On Entry\n"
+      []() { Info() << "Leaf2: OnEntry\n"
                     << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Leaf2: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
-          {"Test",
+          {"exit",
+           [&](const Address& sender, std::istream& args) { m.Exit(); }},
+          {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
@@ -103,13 +116,16 @@ int main(int argc, char** argv) {
       // Parent State
       "Child1",
       // On Entry Action
-      []() { Info() << "Leaf3 On Entry\n"
+      []() { Info() << "Leaf3: OnEntry\n"
                     << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "Leaf3: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
-          {"Test",
+          {"exit",
+           [&](const Address& sender, std::istream& args) { m.Exit(); }},
+          {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();

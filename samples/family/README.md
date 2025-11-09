@@ -5,5 +5,5 @@ This sample demonstrates how a parent State Machine can spawn a child State Mach
 ## Usage
 
 ```
-start parent/Parent
+docker compose up
 ```

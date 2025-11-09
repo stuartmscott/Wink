@@ -30,6 +30,10 @@ Demonstrates different tree shapes of Hierarchical State Machines;
 
 Demonstrates how State Machines running in isolated Docker containers can communicate across a Docker network.
 
+## [PubSub](pubsub/README.md)
+
+Demonstrates how a Publisher/Subscriber pattern can be established.
+
 ## [Switch](switch/README.md)
 
 A simple on/off toggle switch.

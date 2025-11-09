@@ -36,8 +36,8 @@ services:
         sleep 1
         ./build/src/Wink send 10.0.0.2:64002 stop
         ./build/src/Wink send 10.0.0.2:64002 exit
-        ./build/src/Wink start -a 10.0.0.4:42001 time/Ticker:fast 10.0.0.2:64003 2
-        ./build/src/Wink start -a 10.0.0.4:42001 time/Ticker:slow 10.0.0.2:64004 20
+        ./build/src/Wink start -a 10.0.0.4:42001 time/Ticker#fast 10.0.0.2:64003 2
+        ./build/src/Wink start -a 10.0.0.4:42001 time/Ticker#slow 10.0.0.2:64004 20
     expose:
       - "42001:42001/udp"
     networks:

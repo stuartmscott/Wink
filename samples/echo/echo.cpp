@@ -25,9 +25,11 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() {},
+      []() { Info() << "main: OnEntry\n"
+                    << std::flush; },
       // On Exit Action
-      []() {},
+      []() { Info() << "main: OnExit\n"
+                    << std::flush; },
       // Receivers
       std::map<const std::string, Receiver>{
           {"",
