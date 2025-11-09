@@ -12,6 +12,8 @@ add_subdirectory("hierarchy")
 
 # add_subdirectory("network")
 
+add_subdirectory("pubsub")
+
 add_subdirectory("switch")
 
 add_subdirectory("time")

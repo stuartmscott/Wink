@@ -25,6 +25,8 @@ class Server {
       : address_(address), socket_(socket), log_(log) {}
   Server(const Server& s) = delete;
   Server(Server&& s) = delete;
+  Server& operator=(const Server& s) = delete;
+  Server& operator=(Server&& s) = delete;
   ~Server() {}
   int Serve(const std::string& directory);
   int Start(const std::string& name,

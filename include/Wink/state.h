@@ -19,6 +19,8 @@ class State {
         receivers_(receivers) {}
   State(const State& s) = delete;
   State(State&& s) = delete;
+  State& operator=(const State& m) = delete;
+  State& operator=(State&& m) = delete;
   ~State() {}
 
   const std::string name_;

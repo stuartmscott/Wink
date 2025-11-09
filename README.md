@@ -1,6 +1,6 @@
 # Wink
 
-Wink is framework for developing Fault Tolerant Systems with Asynchronous Concurrent Independent Hierarchical Finite State Machines.
+Wink is a framework for developing Fault Tolerant Systems with Asynchronous Concurrent Independent Hierarchical Finite State Machines.
 
 ## Fault Tolerance
 
@@ -86,9 +86,9 @@ int main(int argc, char **argv) {
       // Receivers
       std::map<const std::string, Receiver>{
           {"on", [&](const Address &sender,
-                     std::istream &args) { m.GotoState("on"); }},
+                     std::istream &args) { m.Transition("on"); }},
           {"off", [&](const Address &sender,
-                      std::istream &args) { m.GotoState("off"); }},
+                      std::istream &args) { m.Transition("off"); }},
       }));
 
   m.AddState(std::make_unique<State>(
@@ -115,7 +115,7 @@ When a State Machine spawns another, the parent receives lifecycle messages from
 In the `success` case, the parent will receive;
 
 - started - the child indicates it has started and provides the parent with the name of its binary and the address (ip:port) it has bound to.
-- pulsed - the child indicates it is still alive by sending a heartbeat message every 2 seconds.
+- pulsed - the child indicates it is still alive by sending a heartbeat message every 10 seconds.
 - exited - the child indicates it has terminated.
 
 In the `error` case, the parent will receive;
@@ -125,7 +125,7 @@ In the `error` case, the parent will receive;
 - errored - the child indicates it has encountered an error by sending the error message to the parent.
 - exited - same as above.
 
-If a parent doesn't receive a heartbeat for 10 seconds it will assume the child has failed (maybe the computer crashed, lost power, or the network disconnected - who knows?!).
+If a parent doesn't receive a heartbeat for 1 minute it will assume the child has failed (maybe the computer crashed, lost power, or the network disconnected - who knows?!).
 
 When a parent is notified that a child has errored, it can chose to do nothing, restart the child, or raise an error. In the last situation, the grandparent will be notified that the parent has errored.
 
@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
              args >> child;
              info() << "Parent: " << sender << ' ' << child << " has exited\n"
                     << std::flush;
-             m.GotoState("main"); // Retry
+             m.Transition("main"); // Retry
            }},
       }));
 

@@ -20,6 +20,8 @@ class Machine {
       : name_(name), socket_(socket), address_(address), parent_(parent) {}
   Machine(const Machine& m) = delete;
   Machine(Machine&& m) = delete;
+  Machine& operator=(const Machine& m) = delete;
+  Machine& operator=(Machine&& m) = delete;
   ~Machine() {}
   /**
    * Returns this Machine's Unique Identifier.
