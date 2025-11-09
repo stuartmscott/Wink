@@ -1,0 +1,42 @@
+services:
+  server:
+    image: wink:latest
+    command:
+      - /bin/sh
+      - -c
+      - |
+        ls build/samples/
+        ./build/src/WinkServer serve -a 10.0.0.2:42000 build/samples/
+    expose:
+      - "42000:42000/udp"
+      - "64000:64000/udp"
+      - "64001:64001/udp"
+      - "64002:64002/udp"
+    networks:
+      winknet:
+        ipv4_address: 10.0.0.2
+    working_dir: /Wink
+
+  client:
+    image: wink:latest
+    command:
+      - /bin/sh
+      - -c
+      - |
+        sleep 1
+        ./build/src/Wink start -a 10.0.0.4:42001 -f true family/Parent 10.0.0.2:64001
+    expose:
+      - "42001:42001/udp"
+    networks:
+      winknet:
+        ipv4_address: 10.0.0.4
+    working_dir: /Wink
+
+networks:
+  winknet:
+    driver: bridge
+    internal: true
+    ipam:
+     config:
+       - subnet: 10.0.0.0/16
+         gateway: 10.0.0.1
