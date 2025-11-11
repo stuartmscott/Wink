@@ -73,7 +73,7 @@ int main(int argc, char **argv) {
   Address parent(argv[2]);
   Machine m(name, socket, address, parent);
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "off",
       // Parent State
@@ -84,14 +84,14 @@ int main(int argc, char **argv) {
       // On Exit Action
       []() {},
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"on", [&](const Address &sender,
                      std::istream &args) { m.Transition("on"); }},
           {"off", [&](const Address &sender,
                       std::istream &args) { m.Transition("off"); }},
       }));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "on",
       // Parent State
@@ -102,7 +102,7 @@ int main(int argc, char **argv) {
       // On Exit Action
       []() {},
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
   m.Start();
 }
@@ -153,7 +153,7 @@ int main(int argc, char **argv) {
   Address parent(argv[2]);
   Machine m(name, socket, address, parent);
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "main",
       // Parent State
@@ -167,7 +167,7 @@ int main(int argc, char **argv) {
       []() { info() << "Parent: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"started",
            [&](const Address &sender, std::istream &args) {
              std::string child;
@@ -229,7 +229,7 @@ int main(int argc, char **argv) {
   Address parent(argv[2]);
   Machine m(name, socket, address, parent);
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "main",
       // Parent State
@@ -239,7 +239,7 @@ int main(int argc, char **argv) {
       // On Exit Action
       []() {},
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
   m.Start();
 }

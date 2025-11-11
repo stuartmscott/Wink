@@ -4,6 +4,7 @@
 #include <Wink/address.h>
 #include <Wink/constants.h>
 #include <Wink/socket.h>
+#include <gtest/gtest.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -72,5 +73,8 @@ class MockSocket : public Socket {
   std::vector<SendArgs> sendArgs_;
   std::vector<SendResult> sendResults_;
 };
+
+void setup_default_socket(MockSocket& socket);
+void assert_default_socket(MockSocket& socket, Address& parent);
 
 #endif

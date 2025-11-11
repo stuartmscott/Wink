@@ -21,7 +21,7 @@ int main(int argc, char** argv) {
 
   std::chrono::time_point<std::chrono::system_clock> start;
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "idle",
       // Parent State
@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
       // On Exit Action
       []() {},
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"idle", [&](const Address& sender,
                        std::istream& args) { m.Transition("idle"); }},
           {"start",
@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
            [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "timing",
       // Parent State
@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
       // On Exit Action
       []() {},
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"stop",
            [&](const Address& sender, std::istream& args) {
              const auto now = std::chrono::system_clock::now();

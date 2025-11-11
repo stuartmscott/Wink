@@ -61,9 +61,11 @@ void Machine::Exit() {
   Info() << uid_ << " exited\n" << std::flush;
 
   // Exit current state
-  if (const auto it = states_.find(current_); it != states_.end()) {
-    it->second->on_exit_();
-    // TODO call on_exit for each state in hierarchy
+  std::string s = current_;
+  while (!s.empty()) {
+    auto& state = states_.at(s);
+    state.on_exit_();
+    s = state.parent_;
   }
 
   std::ostringstream oss;
@@ -99,28 +101,41 @@ void Machine::Error(const std::string& message) {
   return;
 }
 
-void Machine::AddState(std::unique_ptr<State>&& state) {
-  const auto n = state->name_;
+void Machine::AddState(State state) {
+  const auto n = state.name_;
   if (current_.empty()) {
     current_ = n;
   }
-  states_.emplace(n, std::move(state));
+  states_.emplace(n, state);
 }
 
 void Machine::Transition(const std::string& state) {
-  // TODO search hierarchy to determine common parent (if any) between current
-  // state and next state.
-  // TODO call on_exit_ and on_entry_ for each state in hierarchy up to common
-  // parent.
+  Info() << uid_ << " transitioned: " << current_ << " to " << state << '\n'
+         << std::flush;
+  auto current_lineage = StateLineage(current_);
+  auto next_lineage = StateLineage(state);
 
-  // Exit current state
-  if (const auto it = states_.find(current_); it != states_.end()) {
-    it->second->on_exit_();
+  std::reverse(current_lineage.begin(), current_lineage.end());
+  std::reverse(next_lineage.begin(), next_lineage.end());
+  auto current_it = current_lineage.begin();
+  auto next_it = next_lineage.begin();
+  while (current_it != current_lineage.end() && next_it != next_lineage.end()) {
+    if (*current_it == *next_it) {
+      current_it = current_lineage.erase(current_it);
+      next_it = next_lineage.erase(next_it);
+    } else
+      break;
+  }
+
+  std::reverse(current_lineage.begin(), current_lineage.end());
+  // Exit current state hierarchy
+  for (const auto& s : current_lineage) {
+    states_.at(s).on_exit_();
   }
   current_ = state;
-  // Enter new state
-  if (const auto it = states_.find(current_); it != states_.end()) {
-    it->second->on_enter_();
+  // Enter new state hierarchy
+  for (const auto& s : next_lineage) {
+    states_.at(s).on_enter_();
   }
 }
 
@@ -285,7 +300,7 @@ void Machine::HandleMessage(
   auto s = current_;
   while (!s.empty()) {
     if (const auto it = states_.find(s); it != states_.end()) {
-      const auto rs = it->second->receivers_;
+      const auto rs = it->second.receivers_;
       if (const auto i = rs.find(m); i != rs.end()) {
         i->second(sender_, iss);
         return;
@@ -295,7 +310,7 @@ void Machine::HandleMessage(
         return;
       } else {
         // Message not handled by state, try parent
-        s = it->second->parent_;
+        s = it->second.parent_;
       }
     } else {
       ::Error() << uid_ << ": No such state: " << s << '\n' << std::flush;
@@ -320,6 +335,16 @@ void Machine::RegisterMachine(const std::string& machine, const int pid) {
 void Machine::UnregisterMachine() {
   Address server(address_.ip(), kServerPort);
   Send(server, "unregister");
+}
+
+std::vector<std::string> Machine::StateLineage(const std::string& state) {
+  std::string s(state);
+  std::vector<std::string> lineage;
+  while (!s.empty()) {
+    lineage.push_back(s);
+    s = states_.at(s).parent_;
+  }
+  return lineage;
 }
 
 // Parse machine name into binary (directory/file), and optional tag.

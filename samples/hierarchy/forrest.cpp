@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     m.Exit();
   };
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf1",
       // Parent State
@@ -39,12 +39,12 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf1: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"goto", goto_receiver},
           {"exit", exit_receiver},
       }));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Parent1",
       // Parent State
@@ -56,12 +56,12 @@ int main(int argc, char** argv) {
       []() { Info() << "Parent1: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"goto", goto_receiver},
           {"exit", exit_receiver},
       }));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf2",
       // Parent State
@@ -73,9 +73,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf2: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Child2",
       // Parent State
@@ -87,9 +87,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Child2: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf4",
       // Parent State
@@ -101,9 +101,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf4: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf5",
       // Parent State
@@ -115,9 +115,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf5: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Parent2",
       // Parent State
@@ -129,12 +129,12 @@ int main(int argc, char** argv) {
       []() { Info() << "Parent2: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"goto", goto_receiver},
           {"exit", exit_receiver},
       }));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Child3",
       // Parent State
@@ -146,9 +146,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Child3: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf6",
       // Parent State
@@ -160,9 +160,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf6: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Child4",
       // Parent State
@@ -174,9 +174,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Child4: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf7",
       // Parent State
@@ -188,9 +188,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf7: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Parent3",
       // Parent State
@@ -202,12 +202,12 @@ int main(int argc, char** argv) {
       []() { Info() << "Parent3: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"goto", goto_receiver},
           {"exit", exit_receiver},
       }));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf3",
       // Parent State
@@ -219,7 +219,7 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf3: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
   m.Start();
 }

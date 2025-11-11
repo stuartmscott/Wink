@@ -18,7 +18,7 @@ int main(int argc, char** argv) {
   Address parent(argv[2]);
   Machine m(name, socket, address, parent);
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf",
       // Parent State
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"exit",
            [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));

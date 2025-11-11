@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
 
   Address publisher(argv[3]);
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "main",
       // Parent State
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
       []() { Info() << "main: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"update",
            [&](const Address& sender, std::istream& args) {
              std::string payload;

@@ -50,7 +50,7 @@ class Machine {
   /**
    * Adds the given state to this state machine.
    */
-  void AddState(std::unique_ptr<State>&& state);
+  void AddState(State state);
   /**
    * Transitions the state machine to the given state.
    */
@@ -102,6 +102,7 @@ class Machine {
       const std::chrono::time_point<std::chrono::system_clock> now);
   void RegisterMachine(const std::string& machine, const int pid);
   void UnregisterMachine();
+  std::vector<std::string> StateLineage(const std::string& state);
 
   std::string name_;
   Socket& socket_;
@@ -111,7 +112,7 @@ class Machine {
   bool running_ = true;
   Address sender_;
   char buffer_[kMaxPayload];
-  std::map<const std::string, const std::unique_ptr<State>> states_;
+  std::map<const std::string, State> states_;
   std::string current_;
   struct ScheduledMessage {
     const Address& address_;

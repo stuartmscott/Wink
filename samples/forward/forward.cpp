@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
 
   Address destination(argv[3]);
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "main",
       // Parent State
@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
       []() { Info() << "main: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;

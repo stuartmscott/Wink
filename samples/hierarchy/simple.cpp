@@ -19,7 +19,7 @@ int main(int argc, char** argv) {
   Address parent(argv[2]);
   Machine m(name, socket, address, parent);
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Parent",
       // Parent State
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
       []() { Info() << "Parent: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{
+      {
           {"goto",
            [&](const Address& sender, std::istream& args) {
              std::string s;
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
            [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf1",
       // Parent State
@@ -54,9 +54,9 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf1: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
-  m.AddState(std::make_unique<State>(
+  m.AddState(State(
       // State Name
       "Leaf2",
       // Parent State
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
       []() { Info() << "Leaf2: OnExit\n"
                     << std::flush; },
       // Receivers
-      std::map<const std::string, Receiver>{}));
+      {}));
 
   m.Start("Leaf2");
 }
