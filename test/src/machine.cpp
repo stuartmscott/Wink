@@ -1,18 +1,21 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/machine.h>
 #include <WinkTest/constants.h>
-#include <WinkTest/socket.h>
+#include <WinkTest/mailbox.h>
 #include <gtest/gtest.h>
 
+#include <string>
 #include <thread>
+#include <vector>
 
 TEST(MachineTest, UID) {
   std::string name("test/Test");
-  MockSocket socket;
-  setup_default_socket(socket);
+  auto mailbox = new MockMailbox();
+  setup_default_mailbox(*mailbox);
   Address address(":42002");
   Address parent(":42001");
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   // Override exit
   m.on_exit_ = []() {};
   m.AddState(State(
@@ -33,12 +36,12 @@ TEST(MachineTest, UID) {
 
 TEST(MachineTest, UID_Tag) {
   std::string name("test/Test#Tag");
-  MockSocket socket;
-  setup_default_socket(socket);
+  auto mailbox = new MockMailbox();
+  setup_default_mailbox(*mailbox);
   Address address(":42002");
   Address parent(":42001");
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   // Override exit
   m.on_exit_ = []() {};
   m.AddState(State(
@@ -59,15 +62,15 @@ TEST(MachineTest, UID_Tag) {
 
 TEST(MachineTest, Start) {
   std::string name("test/Test");
-  MockSocket socket;
-  setup_default_socket(socket);
+  auto mailbox = new MockMailbox();
+  setup_default_mailbox(*mailbox);
   Address address(":42002");
   Address parent(":42001");
 
   int mainOnEntry = 0;
   int mainOnExit = 0;
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   // Override exit
   m.on_exit_ = []() {};
   m.AddState(State(
@@ -88,7 +91,7 @@ TEST(MachineTest, Start) {
 
   ASSERT_EQ("test/Test@127.0.0.1:42002", m.UID());
 
-  assert_default_socket(socket, parent);
+  assert_default_mailbox(*mailbox, parent);
 
   // Initial State Transitions
   ASSERT_EQ(1, mainOnEntry);
@@ -97,8 +100,8 @@ TEST(MachineTest, Start) {
 
 TEST(MachineTest, Start_InitialState) {
   std::string name("test/Test");
-  MockSocket socket;
-  setup_default_socket(socket);
+  auto mailbox = new MockMailbox();
+  setup_default_mailbox(*mailbox);
   Address address(":42002");
   Address parent(":42001");
 
@@ -107,7 +110,7 @@ TEST(MachineTest, Start_InitialState) {
   int secondOnEntry = 0;
   int secondOnExit = 0;
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   // Override exit
   m.on_exit_ = []() {};
   m.AddState(State(
@@ -150,7 +153,7 @@ TEST(MachineTest, Start_InitialState) {
 
   ASSERT_EQ("test/Test@127.0.0.1:42002", m.UID());
 
-  assert_default_socket(socket, parent);
+  assert_default_mailbox(*mailbox, parent);
 
   // Initial State Transitions
   ASSERT_EQ(1, firstOnEntry);
@@ -168,97 +171,92 @@ TEST(MachineTest, Start_Heartbeat) {
 
 TEST(MachineTest, Exit) {
   std::string name("test/Test");
-  MockSocket socket;
+  auto mailbox = new MockMailbox();
   Address address(":42002");
   Address parent(":42001");
 
   // Set mock send result
   SendResult result = 0;
-  socket.sendResults_.push_back(result);
-  socket.sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   // Override exit
   m.on_exit_ = []() {};
   m.Exit();
 
-  // Check socket send
-  ASSERT_EQ(2, socket.sendArgs_.size());
+  // Check mailbox send
+  ASSERT_EQ(2, mailbox->sendArgs_.size());
   // Send Exited Message to Spawner
-  const auto arg0 = socket.sendArgs_.at(0);
+  const auto arg0 = mailbox->sendArgs_.at(0);
   ASSERT_EQ(parent.ip(), arg0.toIP);
   ASSERT_EQ(parent.port(), arg0.toPort);
-  ASSERT_EQ(std::string("exited test/Test"), std::string(arg0.buffer));
-  ASSERT_EQ(17, arg0.length);
+  ASSERT_EQ(std::string("exited test/Test"), arg0.message);
   // Unregister Machine
-  const auto arg1 = socket.sendArgs_.at(1);
+  const auto arg1 = mailbox->sendArgs_.at(1);
   ASSERT_EQ(kLocalhost, arg1.toIP);
   ASSERT_EQ(kServerPort, arg1.toPort);
-  ASSERT_EQ(std::string("unregister"), std::string(arg1.buffer));
-  ASSERT_EQ(11, arg1.length);
+  ASSERT_EQ(std::string("unregister"), arg1.message);
 }
 
 TEST(MachineTest, Error) {
   std::string name("test/Test");
-  MockSocket socket;
+  auto mailbox = new MockMailbox();
   Address address(":42002");
   Address parent(":42001");
 
   // Set mock send result
   SendResult result = 0;
-  socket.sendResults_.push_back(result);
-  socket.sendResults_.push_back(result);
-  socket.sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   // Override exit
   m.on_exit_ = []() {};
   m.Error("AHHHH");
 
-  // Check socket send
-  ASSERT_EQ(3, socket.sendArgs_.size());
+  // Check mailbox send
+  ASSERT_EQ(3, mailbox->sendArgs_.size());
   // Send Errored Message to Spawner
-  const auto arg0 = socket.sendArgs_.at(0);
+  const auto arg0 = mailbox->sendArgs_.at(0);
   ASSERT_EQ(parent.ip(), arg0.toIP);
   ASSERT_EQ(parent.port(), arg0.toPort);
-  ASSERT_EQ(std::string("errored test/Test AHHHH"), std::string(arg0.buffer));
-  ASSERT_EQ(24, arg0.length);
+  ASSERT_EQ(std::string("errored test/Test AHHHH"), arg0.message);
   // Send Exited Message to Spawner
-  const auto arg1 = socket.sendArgs_.at(1);
+  const auto arg1 = mailbox->sendArgs_.at(1);
   ASSERT_EQ(parent.ip(), arg1.toIP);
   ASSERT_EQ(parent.port(), arg1.toPort);
-  ASSERT_EQ(std::string("exited test/Test"), std::string(arg1.buffer));
-  ASSERT_EQ(17, arg1.length);
+  ASSERT_EQ(std::string("exited test/Test"), arg1.message);
   // Unregister Machine
-  const auto arg2 = socket.sendArgs_.at(2);
+  const auto arg2 = mailbox->sendArgs_.at(2);
   ASSERT_EQ(kLocalhost, arg2.toIP);
   ASSERT_EQ(kServerPort, arg2.toPort);
-  ASSERT_EQ(std::string("unregister"), std::string(arg2.buffer));
-  ASSERT_EQ(11, arg2.length);
+  ASSERT_EQ(std::string("unregister"), arg2.message);
 }
 
 TEST(MachineTest, AddState) {
   std::string name("test/Test");
-  MockSocket socket;
+  auto mailbox = new MockMailbox();
   Address address(":42002");
   Address parent(":42001");
 
   // Set mock send result
   SendResult result = 0;
-  socket.sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   // TODO Test state is added to the vector of states
   // TODO Test first state becomes initial default
 }
 
 TEST(MachineTest, Transition) {
   std::string name("test/Test");
-  MockSocket socket;
+  auto mailbox = new MockMailbox();
   Address address(":42002");
   Address parent(":42001");
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   int firstOnEntry = 0;
   int firstOnExit = 0;
@@ -299,11 +297,11 @@ TEST(MachineTest, Transition) {
 
 TEST(MachineTest, Transition_Hierarchy) {
   std::string name("test/Test");
-  MockSocket socket;
+  auto mailbox = new MockMailbox();
   Address address(":42002");
   Address parent(":42001");
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   std::vector<int> entries;
   std::vector<int> exits;
@@ -419,35 +417,33 @@ TEST(MachineTest, Transition_Hierarchy) {
 
 TEST(MachineTest, Send) {
   std::string name("test/Test");
-  MockSocket socket;
+  auto mailbox = new MockMailbox();
   Address address(":42002");
   Address parent(":42001");
 
   // Set mock send result
   SendResult result = 0;
-  socket.sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   Address destination(":42003");
   m.Send(destination, kTestMessage);
 
-  // Check socket send
-  ASSERT_EQ(1, socket.sendArgs_.size());
-  const auto arg = socket.sendArgs_.at(0);
+  // Check mailbox send
+  ASSERT_EQ(1, mailbox->sendArgs_.size());
+  const auto arg = mailbox->sendArgs_.at(0);
   ASSERT_EQ(destination.ip(), arg.toIP);
   ASSERT_EQ(destination.port(), arg.toPort);
-  ASSERT_EQ(std::string(kTestMessage), std::string(arg.buffer));
-  ASSERT_EQ(10, arg.length);
+  ASSERT_EQ(std::string(kTestMessage), arg.message);
 }
 
 TEST(MachineTest, SendAt) {
   std::string name("test/Test");
-  UDPSocket socket;
   Address address(":42002");
   Address parent(":42001");
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, address, parent);
   // Override exit
   m.on_exit_ = []() {};
   m.AddState(State(
@@ -475,11 +471,10 @@ TEST(MachineTest, SendAt) {
 
 TEST(MachineTest, SendAfter) {
   std::string name("test/Test");
-  UDPSocket socket;
   Address address(":42002");
   Address parent(":42001");
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, address, parent);
   // Override exit
   m.on_exit_ = []() {};
   m.AddState(State(
@@ -505,46 +500,43 @@ TEST(MachineTest, SendAfter) {
 
 TEST(MachineTest, Spawn_Local) {
   std::string name("test/Test");
-  MockSocket socket;
+  auto mailbox = new MockMailbox();
   Address address(":42002");
   Address parent(":42001");
 
   // Set mock send result
   SendResult result = 0;
-  socket.sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   m.Spawn("useless/Useless");
 
-  // Check socket send
-  ASSERT_EQ(1, socket.sendArgs_.size());
-  const auto arg = socket.sendArgs_.at(0);
+  // Check mailbox send
+  ASSERT_EQ(1, mailbox->sendArgs_.size());
+  const auto arg = mailbox->sendArgs_.at(0);
   ASSERT_EQ(kLocalhost, arg.toIP);
   ASSERT_EQ(kServerPort, arg.toPort);
-  ASSERT_EQ(std::string("start useless/Useless :0"), std::string(arg.buffer));
-  ASSERT_EQ(25, arg.length);
+  ASSERT_EQ(std::string("start useless/Useless :0"), arg.message);
 }
 
 TEST(MachineTest, Spawn_Remote) {
   std::string name("test/Test");
-  MockSocket socket;
+  auto mailbox = new MockMailbox();
   Address address(":42002");
   Address parent(":42001");
 
   // Set mock send result
   SendResult result = 0;
-  socket.sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
 
-  Machine m(name, socket, address, parent);
+  Machine m(name, mailbox, address, parent);
   Address destination(kTestIP, kTestPort);
   m.Spawn("useless/Useless", destination);
 
-  // Check socket send
-  ASSERT_EQ(1, socket.sendArgs_.size());
-  const auto arg = socket.sendArgs_.at(0);
+  // Check mailbox send
+  ASSERT_EQ(1, mailbox->sendArgs_.size());
+  const auto arg = mailbox->sendArgs_.at(0);
   ASSERT_EQ(kTestIP, arg.toIP);
   ASSERT_EQ(kServerPort, arg.toPort);
-  ASSERT_EQ(std::string("start useless/Useless :42424"),
-            std::string(arg.buffer));
-  ASSERT_EQ(29, arg.length);
+  ASSERT_EQ(std::string("start useless/Useless :42424"), arg.message);
 }

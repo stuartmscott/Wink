@@ -1,65 +1,48 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/client.h>
 #include <Wink/log.h>
 #include <WinkTest/constants.h>
-#include <WinkTest/socket.h>
+#include <WinkTest/mailbox.h>
 #include <arpa/inet.h>
 #include <gtest/gtest.h>
 
-TEST(ClientTest, StartMachine) {
-  MockSocket socket;
+#include <string>
+#include <vector>
 
-  // Set mock bind result
-  {
-    BindResult result;
-    result.ip = kLocalhost;
-    result.port = kTestPort;
-    result.result = 0;
-    socket.bindResults_.push_back(result);
-  }
-  // Set mock setreceivetimeout result
-  {
-    SetReceiveTimeoutResult result = 0;
-    socket.setReceiveTimeoutResults_.push_back(result);
-  }
+TEST(ClientTest, StartMachine) {
+  MockMailbox mailbox;
+
   // Set mock send result
   {
-    SendResult result = 0;
-    socket.sendResults_.push_back(result);
+    SendResult result = true;
+    mailbox.sendResults_.push_back(result);
   }
   // Set mock receive result
   {
     ReceiveResult result;
     result.fromIP = kTestIP;
     result.fromPort = kTestPort;
-    result.result = 0;
+    result.result = true;
     std::ostringstream oss;
     oss << "started ";
     oss << kTestBinary;
-    strcpy(result.buffer, oss.str().c_str());
-    socket.receiveResults_.push_back(result);
+    result.message = oss.str();
+    mailbox.receiveResults_.push_back(result);
   }
 
   // Issue request
   Address address(kLocalhost, 0);
   Address destination(kTestIP, 0);
   std::vector<std::string> args;
-  ASSERT_EQ(0, StartMachine(socket, address, kTestBinary, destination, args));
+  ASSERT_EQ(0, StartMachine(mailbox, address, kTestBinary, destination, args));
 
-  // Check socket receive timeout
+  // Check mailbox send
   {
-    ASSERT_EQ(1, socket.setReceiveTimeoutArgs_.size());
-    const auto arg = socket.setReceiveTimeoutArgs_.at(0);
-    ASSERT_EQ(kHeartbeatTimeout, arg.seconds);
-  }
-
-  // Check socket send
-  {
-    ASSERT_EQ(1, socket.sendArgs_.size());
-    const auto arg = socket.sendArgs_.at(0);
+    ASSERT_EQ(1, mailbox.sendArgs_.size());
+    const auto arg = mailbox.sendArgs_.at(0);
     ASSERT_EQ(kTestIP, arg.toIP);
     ASSERT_EQ(kServerPort, arg.toPort);
-    ASSERT_EQ(std::string("start wink.bin :0"), std::string(arg.buffer));
-    ASSERT_EQ(18, arg.length);
+    ASSERT_EQ("start wink.bin :0", arg.message);
   }
 
   // Check destination address
@@ -68,100 +51,101 @@ TEST(ClientTest, StartMachine) {
 }
 
 TEST(ClientTest, StopMachine) {
-  MockSocket socket;
+  MockMailbox mailbox;
 
   // Set mock send result
   {
     SendResult result = 0;
-    socket.sendResults_.push_back(result);
+    mailbox.sendResults_.push_back(result);
   }
 
   Address address(kTestIP, kTestPort);
-  ASSERT_EQ(0, StopMachine(socket, address));
+  ASSERT_EQ(0, StopMachine(mailbox, address));
 
-  // Check socket send
-  ASSERT_EQ(1, socket.sendArgs_.size());
-  const auto arg = socket.sendArgs_.at(0);
+  // Check mailbox send
+  ASSERT_EQ(1, mailbox.sendArgs_.size());
+  const auto arg = mailbox.sendArgs_.at(0);
   ASSERT_EQ(kTestIP, arg.toIP);
   ASSERT_EQ(kServerPort, arg.toPort);
-  ASSERT_EQ(std::string("stop 42424"), std::string(arg.buffer));
-  ASSERT_EQ(11, arg.length);
+  ASSERT_EQ("stop 42424", arg.message);
 }
 
 TEST(ClientTest, SendMessage) {
-  MockSocket socket;
+  MockMailbox mailbox;
 
   // Set mock send result
   {
     SendResult result = 0;
-    socket.sendResults_.push_back(result);
+    mailbox.sendResults_.push_back(result);
   }
 
   Address address(kTestIP, kTestPort);
-  ASSERT_EQ(0, SendMessage(socket, address, kTestMessage));
+  SendMessage(mailbox, address, kTestMessage);
 
-  // Check socket send
-  ASSERT_EQ(1, socket.sendArgs_.size());
-  const auto arg = socket.sendArgs_.at(0);
+  // Check mailbox send
+  ASSERT_EQ(1, mailbox.sendArgs_.size());
+  const auto arg = mailbox.sendArgs_.at(0);
   ASSERT_EQ(kTestIP, arg.toIP);
   ASSERT_EQ(kTestPort, arg.toPort);
-  ASSERT_EQ(kTestMessage, std::string(arg.buffer));
-  ASSERT_EQ(10, arg.length);
+  ASSERT_EQ(kTestMessage, arg.message);
+}
+
+TEST(ClientTest, ReceiveMessage) {
+  MockMailbox mailbox;
+
+  // Set mock receive result
+  {
+    ReceiveResult result;
+    result.fromIP = kTestIP;
+    result.fromPort = kTestPort;
+    result.message = kTestMessage;
+    result.result = true;
+    mailbox.receiveResults_.push_back(result);
+  }
+
+  Address address;
+  std::string message;
+  ASSERT_TRUE(ReceiveMessage(mailbox, address, message));
+
+  // Check mailbox receive
+  ASSERT_EQ(1, mailbox.receiveArgs_.size());
+  ASSERT_EQ(kTestIP, address.ip());
+  ASSERT_EQ(kTestPort, address.port());
+  ASSERT_EQ(kTestMessage, message);
 }
 
 TEST(ClientTest, ListMachines) {
-  MockSocket socket;
+  MockMailbox mailbox;
 
-  // Set mock bind result
-  {
-    BindResult result;
-    result.ip = kLocalhost;
-    result.port = kTestPort;
-    result.result = 0;
-    socket.bindResults_.push_back(result);
-  }
-  // Set mock setreceivetimeout result
-  {
-    SetReceiveTimeoutResult result = 0;
-    socket.setReceiveTimeoutResults_.push_back(result);
-  }
   // Set mock send result
   {
     SendResult result = 0;
-    socket.sendResults_.push_back(result);
+    mailbox.sendResults_.push_back(result);
   }
   // Set mock receive result
   {
     ReceiveResult result;
     result.fromIP = kTestIP;
     result.fromPort = kServerPort;
-    result.result = 0;
+    result.result = true;
     std::ostringstream oss;
     oss << "Port,Machine,PID\n";
     oss << kTestPort << ',' << kTestBinary << ',' << kTestPID << '\n';
-    strcpy(result.buffer, oss.str().c_str());
-    socket.receiveResults_.push_back(result);
+    result.message = oss.str();
+    mailbox.receiveResults_.push_back(result);
   }
 
   // Issue request
   Address destination(kTestIP, kServerPort);
-  ASSERT_EQ(0, ListMachines(socket, destination));
+  ASSERT_EQ(0, ListMachines(mailbox, destination));
 
-  // Check socket receive timeout
+  // Check mailbox send
   {
-    ASSERT_EQ(1, socket.setReceiveTimeoutArgs_.size());
-    const auto arg = socket.setReceiveTimeoutArgs_.at(0);
-    ASSERT_EQ(kHeartbeatTimeout, arg.seconds);
-  }
-
-  // Check socket send
-  {
-    ASSERT_EQ(1, socket.sendArgs_.size());
-    const auto arg = socket.sendArgs_.at(0);
+    ASSERT_EQ(1, mailbox.sendArgs_.size());
+    const auto arg = mailbox.sendArgs_.at(0);
     ASSERT_EQ(kTestIP, arg.toIP);
     ASSERT_EQ(kServerPort, arg.toPort);
-    ASSERT_EQ(std::string("list"), std::string(arg.buffer));
-    ASSERT_EQ(5, arg.length);
+    ASSERT_EQ("list", arg.message);
   }
 
   // Check destination address

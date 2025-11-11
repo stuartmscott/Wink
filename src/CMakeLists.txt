@@ -5,6 +5,7 @@ set(INCLUDE_DIR "../include")
 
 set(LIBRARY_SOURCES
   "address.cpp"
+  "async_mailbox.cpp"
   "client.cpp"
   "log.cpp"
   "machine.cpp"

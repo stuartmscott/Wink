@@ -1,21 +1,22 @@
-#ifndef CONSTANTS_H
-#define CONSTANTS_H
+// Copyright 2022-2025 Stuart Scott
+#ifndef INCLUDE_WINK_CONSTANTS_H_
+#define INCLUDE_WINK_CONSTANTS_H_
 
-typedef unsigned char uchar;
-typedef unsigned int uint;
-typedef unsigned short ushort;
+#include <chrono>
+#include <cstdint>
 
-constexpr ushort kMaxPayload = 65507;
+constexpr uint16_t kMaxUDPPayload = 65507;
+constexpr uint16_t kMaxRetries = 5;
 
-constexpr ushort kNoTimeout = 0;          // Unlimited
-constexpr ushort kReplyTimeout = 1;       // 1 second
-constexpr ushort kHeartbeatTimeout = 60;  // 1 minute
-constexpr ushort kReceiveTimeout = 600;   // 10 minutes
+constexpr std::chrono::seconds kNoTimeout(0);  // Unlimited
+constexpr std::chrono::seconds kSendTimeout(1);
+constexpr std::chrono::seconds kReceiveTimeout(3);
 
-constexpr ushort kPulseInterval = 10;  // 10 seconds
+constexpr std::chrono::seconds kHeartbeatTimeout(60);
+constexpr std::chrono::seconds kPulseInterval(10);
 
-constexpr ushort kServerPort = 42000;
+constexpr uint16_t kServerPort = 42000;
 
 constexpr char kLocalhost[] = "127.0.0.1";
 
-#endif
+#endif  // INCLUDE_WINK_CONSTANTS_H_

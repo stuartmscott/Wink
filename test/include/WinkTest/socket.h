@@ -1,80 +1,35 @@
-#ifndef SOCKET_TEST_H
-#define SOCKET_TEST_H
+// Copyright 2022-2025 Stuart Scott
+#ifndef TEST_INCLUDE_WINKTEST_SOCKET_H_
+#define TEST_INCLUDE_WINKTEST_SOCKET_H_
 
 #include <Wink/address.h>
 #include <Wink/constants.h>
 #include <Wink/socket.h>
 #include <gtest/gtest.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <unistd.h>
 
-#include <algorithm>
-#include <cstring>
-#include <vector>
-
-struct BindArgs {
-  std::string ip;
-  ushort port;
-};
-
-struct BindResult {
-  std::string ip;
-  ushort port;
-  int result;
-};
-
-struct SetReceiveTimeoutArgs {
-  int seconds;
-};
-
-typedef int SetReceiveTimeoutResult;
-
-struct ReceiveArgs {
-  int length;
-  int flags;
-};
-
-struct ReceiveResult {
-  std::string fromIP;
-  ushort fromPort;
-  char buffer[kMaxPayload];
-  int result;
-};
-
-struct SendArgs {
-  std::string toIP;
-  ushort toPort;
-  char buffer[kMaxPayload];
-  int length;
-  int flags;
-};
-
-typedef int SendResult;
+#include <deque>
 
 class MockSocket : public Socket {
  public:
-  MockSocket() {}
-  MockSocket(const MockSocket& s) = delete;
-  MockSocket(MockSocket&& s) = delete;
-  ~MockSocket() {}
-  int Bind(Address& self) override;
-  int SetReceiveTimeout(const int seconds) override;
-  int Receive(Address& from, char* buffer, const int length,
-              const int flags = 0) override;
-  int Send(const Address& to, const char* buffer, const int length,
-           const int flags = 0) override;
-  std::vector<BindArgs> bindArgs_;
-  std::vector<BindResult> bindResults_;
-  std::vector<SetReceiveTimeoutArgs> setReceiveTimeoutArgs_;
-  std::vector<SetReceiveTimeoutResult> setReceiveTimeoutResults_;
-  std::vector<ReceiveArgs> receiveArgs_;
-  std::vector<ReceiveResult> receiveResults_;
-  std::vector<SendArgs> sendArgs_;
-  std::vector<SendResult> sendResults_;
+  ssize_t Receive(Address&, char*) override;
+  bool Send(const Address&, const char*, const ssize_t) override;
+  void Push(const Address&, const char*, const ssize_t);
+  bool Pop(Address&, char*, ssize_t&);
+  void Await(Address&, char*, ssize_t&);
+
+ private:
+  std::mutex mutex_;
+  struct Packet {
+    Address address_;
+    char buffer_[kMaxTestPayload];
+    ssize_t length_;
+    Packet(const Address address, const char* buffer, const ssize_t length)
+        : address_(address), length_(length) {
+      std::memcpy(buffer_, buffer, length);
+    }
+  };
+  std::deque<Packet> receive_queue_;
+  std::deque<Packet> send_queue_;
 };
 
-void setup_default_socket(MockSocket& socket);
-void assert_default_socket(MockSocket& socket, Address& parent);
-
-#endif
+#endif  // TEST_INCLUDE_WINKTEST_SOCKET_H_

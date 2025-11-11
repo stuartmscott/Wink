@@ -1,79 +1,77 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/log.h>
 #include <Wink/socket.h>
-#include <sys/time.h>
 
-UDPSocket::UDPSocket() : socket_(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) {
+#include <string>
+
+UDPSocket::UDPSocket(Address& address)
+    : socket_(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) {
   if (socket_ < 0) {
-    Error() << "Failed to create socket: " << std::strerror(errno) << '\n'
-            << std::flush;
+    throw std::runtime_error(std::string("Failed to open UDP socket: ") +
+                             std::strerror(errno));
   }
+
+  // Enable address reuse
   auto on = 1;
   if (setsockopt(socket_, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) < 0) {
-    Error() << "Failed to set reuse option: " << std::strerror(errno) << '\n'
-            << std::flush;
+    throw std::runtime_error(
+        std::string("Failed to set UDP socket reuse option: ") +
+        std::strerror(errno));
   }
-}
 
-UDPSocket::~UDPSocket() { close(socket_); }
-
-int UDPSocket::SetReceiveTimeout(const int seconds) {
-  if (socket_ < 0) {
-    return -1;
-  }
-  struct timeval tv;
-  tv.tv_sec = seconds;
-  tv.tv_usec = 0;
-  return setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv,
-                    sizeof(struct timeval));
-}
-
-int UDPSocket::Bind(Address& address) {
-  if (socket_ < 0) {
-    return -1;
-  }
+  // Bind socket
   struct sockaddr_in sa;
   address.WriteTo(sa);
   socklen_t size = sizeof(struct sockaddr_in);
   if (const auto result = bind(socket_, (struct sockaddr*)&sa, size);
       result < 0) {
-    return result;
+    throw std::runtime_error(std::string("Failed to bind UDP socket: ") +
+                             std::strerror(errno));
   }
+
+  // Retrieve assigned address
   if (const auto result = getsockname(socket_, (struct sockaddr*)&sa, &size);
       result < 0) {
-    return result;
+    throw std::runtime_error(std::string("Failed to get UDP socket name: ") +
+                             std::strerror(errno));
   }
   address.ReadFrom(sa);
-  return 0;
+
+  // Set receive timeout
+  struct timeval tv;
+  tv.tv_sec = kReceiveTimeout.count();
+  tv.tv_usec = 0;
+  if (setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv,
+                 sizeof(struct timeval)) < 0) {
+    throw std::runtime_error(
+        std::string("Failed to set UDP socket receive timeout: ") +
+        std::strerror(errno));
+  }
 }
 
-int UDPSocket::Receive(Address& from, char* buffer, const int length,
-                       const int flags) {
-  if (socket_ < 0) {
-    return -1;
-  }
+ssize_t UDPSocket::Receive(Address& from, char* buffer) {
   struct sockaddr_in address;
   socklen_t size = sizeof(struct sockaddr_in);
-  int result = recvfrom(socket_, buffer, length, flags,
-                        (struct sockaddr*)&address, &size);
+  const ssize_t result = recvfrom(socket_, buffer, kMaxUDPPayload, 0,
+                                  (struct sockaddr*)&address, &size);
   if (result < 0) {
-    return result;
+    if (errno != EAGAIN) {
+      Error() << "Failed to receive packet: " << std::strerror(errno) << '\n'
+              << std::flush;
+    }
+  } else {
+    from.ReadFrom(address);
   }
-  from.ReadFrom(address);
-  buffer[result] = 0;
-  if (result > 0 && buffer[result - 1] == '\n') {
-    buffer[result - 1] = 0;
-  }
-  return 0;
+  return result;
 }
 
-int UDPSocket::Send(const Address& to, const char* buffer, const int length,
-                    const int flags) {
-  if (socket_ < 0) {
-    return -1;
-  }
+bool UDPSocket::Send(const Address& to, const char* buffer,
+                     const ssize_t length) {
+  std::scoped_lock send_lock(send_mutex_);
   struct sockaddr_in address;
   to.WriteTo(address);
-  socklen_t size = sizeof(struct sockaddr_in);
-  return sendto(socket_, buffer, std::min(length, (int)kMaxPayload), flags,
-                (struct sockaddr*)&address, size);
+  const ssize_t result =
+      sendto(socket_, buffer, length, 0, (struct sockaddr*)&address,
+             sizeof(struct sockaddr_in));
+  return result >= 0;
 }

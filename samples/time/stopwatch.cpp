@@ -1,3 +1,4 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/address.h>
 #include <Wink/machine.h>
 #include <Wink/state.h>
@@ -14,10 +15,9 @@ int main(int argc, char** argv) {
   }
 
   std::string name(argv[0]);
-  UDPSocket socket;
   Address address(argv[1]);
   Address parent(argv[2]);
-  Machine m(name, socket, address, parent);
+  Machine m(name, address, parent);
 
   std::chrono::time_point<std::chrono::system_clock> start;
 

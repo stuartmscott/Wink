@@ -1,7 +1,9 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/address.h>
 
 #include <cctype>
 #include <cstring>
+#include <string>
 
 void Address::FromString(const std::string& address) {
   const auto index = address.find(':');
@@ -41,7 +43,7 @@ void Address::WriteTo(struct sockaddr_in& address) const {
     auto c = ip_.c_str();
     if (!isdigit(c[0])) {
       if (const auto record = gethostbyname(c); record) {
-        in_addr* ia = (in_addr*)record->h_addr;
+        in_addr* ia = reinterpret_cast<in_addr*>(record->h_addr);
         c = inet_ntoa(*ia);
       }
     }

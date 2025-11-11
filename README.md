@@ -68,10 +68,9 @@ int main(int argc, char **argv) {
   }
 
   std::string name(argv[0]);
-  UDPSocket socket;
   Address address(argv[1]);
   Address parent(argv[2]);
-  Machine m(name, socket, address, parent);
+  Machine m(name, address, parent);
 
   m.AddState(State(
       // State Name
@@ -148,10 +147,9 @@ int main(int argc, char **argv) {
   }
 
   std::string name(argv[0]);
-  UDPSocket socket;
   Address address(argv[1]);
   Address parent(argv[2]);
-  Machine m(name, socket, address, parent);
+  Machine m(name, address, parent);
 
   m.AddState(State(
       // State Name
@@ -224,10 +222,9 @@ int main(int argc, char **argv) {
   }
 
   std::string name(argv[0]);
-  UDPSocket socket;
   Address address(argv[1]);
   Address parent(argv[2]);
-  Machine m(name, socket, address, parent);
+  Machine m(name, address, parent);
 
   m.AddState(State(
       // State Name
@@ -277,28 +274,29 @@ Parent: 127.0.0.1:64701 family/Child has exited                                 
 Parent: OnExit                                                                  # Parent Exits `main` State
 ```
 
-## Communication
+## Mailbox
 
-Machines communicate via asynchronous message passing using UDP.
+Each Machine has a Mailbox through which Messages are sent and received.
 
-Each machine maintains a sequence counter for each recipient it to sends, the current value of which is included in each message sent, and incremented afterwards.
+Messages are transmitted asynchronously over UDP which is fast, but unreliable - providing no guarantees that a message is delivered.
 
-### Reliability
+Mailboxes implement an acknowledgement and retry mechanism to increase the reliability of message passing - recipients respond with an acknowledgement upon receipt of a message, and senders will retry unacknowledged messages up to 5 times.
 
-UDP is fast but unreliable, providing no guarantees that a packet is delivered. To somewhat remedy this, recipients respond with an acknowledgement upon receipt of a message, and senders will retry failed messages.
+Mailboxes maintain a send/receive pair of sequence counters for each recipient. The send sequence number is included in each outgoing message, and incremented afterwards. The receive sequence number is used to detect duplicate messages.
 
 Consider the scenario:
 - Machine A sends Message M to Machine B.
 - If B receives M, it responds with Acknowledgement K containing M's sequence number.
-- If A does not receive K within 10 seconds, it will resend M, up to 3 times.
-- If B receives M and sends K, but A does not receive K it will resend M. B will ignore the duplicate M but will resend K.
+- If A does not receive K within 10 seconds, it will resend M, up to 5 times.
+- If B receives M and sends K, but A does not receive K it will resend M. B will ignore the duplicate M, but will resend K.
 
 ## Repository Layout
 
  - include: header files
  - samples: code samples
  - src: source code files
- - test: test code files
+ - test/include: test header files
+ - test/src: test code files
 
 ## Build
 

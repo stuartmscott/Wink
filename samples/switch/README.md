@@ -5,7 +5,7 @@ A simple on/off toggle switch.
 ## Usage
 
 ```
-start switch/Switch
-send <switch> on
-send <switch> off
+build/src/Wink start switch/Switch
+build/src/Wink send <switch> on
+build/src/Wink send <switch> off
 ```

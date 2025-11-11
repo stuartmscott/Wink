@@ -1,4 +1,10 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/server/server.h>
+
+#include <map>
+#include <string>
+#include <utility>
+#include <vector>
 
 void Usage(std::string name) {
   Info() << name << '\n';
@@ -49,7 +55,6 @@ int main(int argc, char** argv) {
 
   if (command == "serve") {
     Address address(kLocalhost, kServerPort);
-    UDPSocket socket;
     std::string log;
 
     if (parameters.size() == 0) {
@@ -70,7 +75,8 @@ int main(int argc, char** argv) {
       }
     }
 
-    Server s(address, socket, log);
+    AsyncMailbox mailbox(new UDPSocket(address));
+    Server s(address, mailbox, log);
     return s.Serve(parameters.at(0));
   } else if (command == "help") {
     if (argc < 3) {

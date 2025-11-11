@@ -1,24 +1,26 @@
-#ifndef CLIENT_H
-#define CLIENT_H
+// Copyright 2022-2025 Stuart Scott
+#ifndef INCLUDE_WINK_CLIENT_H_
+#define INCLUDE_WINK_CLIENT_H_
 
 #include <Wink/constants.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
-#include <Wink/socket.h>
+#include <Wink/mailbox.h>
 #include <arpa/inet.h>
 
-#include <chrono>
 #include <cstring>
 #include <map>
 #include <sstream>
 #include <string>
 #include <vector>
 
-int StartMachine(Socket& sock, Address& addr, const std::string& name,
-                 Address& dest, const std::vector<std::string> args,
+int StartMachine(Mailbox& mailbox, Address& address, const std::string& name,
+                 Address& destination, const std::vector<std::string> args,
                  const bool follow = false);
-int StopMachine(Socket& sock, const Address& addr);
-int SendMessage(Socket& sock, const Address& addr, const std::string& message);
-int ListMachines(Socket& sock, const Address& server);
+int StopMachine(Mailbox& mailbox, const Address& address);
+void SendMessage(Mailbox& mailbox, const Address& to,
+                 const std::string& message);
+bool ReceiveMessage(Mailbox& mailbox, Address& from, std::string& message);
+int ListMachines(Mailbox& mailbox, const Address& server);
 
-#endif
+#endif  // INCLUDE_WINK_CLIENT_H_

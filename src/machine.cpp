@@ -1,15 +1,13 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/machine.h>
+
+#include <string>
+#include <utility>
+#include <vector>
 
 void Machine::Start(const std::string& initial) {
   if (states_.empty()) {
     // Nothing to do
-    return;
-  }
-
-  // Bind to port
-  if (const auto result = socket_.Bind(address_); result < 0) {
-    ::Error() << "Failed to bind to port " << address_.port() << '\n'
-              << std::flush;
     return;
   }
 
@@ -18,15 +16,6 @@ void Machine::Start(const std::string& initial) {
   oss << '@';
   oss << address_;
   uid_ = oss.str();
-
-  // Set Receive Timeout
-  if (const auto result = socket_.SetReceiveTimeout(kReplyTimeout);
-      result < 0) {
-    ::Error() << "Failed to set receive timeout: " << std::strerror(errno)
-              << '\n'
-              << std::flush;
-    return;
-  }
 
   Info() << uid_ << " started\n" << std::flush;
 
@@ -48,12 +37,12 @@ void Machine::Start(const std::string& initial) {
   while (running_) {
     const auto now = std::chrono::system_clock::now();
     CheckChildren(now);  // Check every loop
-    if (now - last > std::chrono::seconds(kPulseInterval)) {
+    if (now - last > kPulseInterval) {
       SendPulse();  // Send every kPulseInterval
       last = now;
     }
     SendScheduled(now);   // Send any scheduled messages
-    ReceiveMessage(now);  // Waits up to kReplyTimeout for message
+    ReceiveMessage(now);  // Waits up to kReceiveTimeout for message
   }
 }
 
@@ -79,6 +68,9 @@ void Machine::Exit() {
   UnregisterMachine();
 
   // TODO kill all child machines
+
+  while (!mailbox_->Flushed()) {
+  }
 
   on_exit_();
   running_ = false;
@@ -123,8 +115,9 @@ void Machine::Transition(const std::string& state) {
     if (*current_it == *next_it) {
       current_it = current_lineage.erase(current_it);
       next_it = next_lineage.erase(next_it);
-    } else
+    } else {
       break;
+    }
   }
 
   std::reverse(current_lineage.begin(), current_lineage.end());
@@ -143,18 +136,11 @@ void Machine::Transition(const std::string& state) {
 
 void Machine::Send(const Address& to, const std::string& message) {
   Info() << uid_ << " > " << to << ' ' << message << '\n' << std::flush;
-  if (const auto result =
-          socket_.Send(to, message.c_str(), message.length() + 1);
-      result < 0) {
-    ::Error() << uid_ << ": Failed to send packet: " << std::strerror(errno)
-              << '\n'
-              << std::flush;
-  }
+  mailbox_->Send(to, message);
 }
 
-void Machine::SendAt(
-    const Address& to, const std::string& message,
-    const std::chrono::time_point<std::chrono::system_clock> time) {
+void Machine::SendAt(const Address& to, const std::string& message,
+                     const std::chrono::system_clock::time_point time) {
   queue_.push_back(ScheduledMessage{to, message, time});
 }
 
@@ -198,12 +184,10 @@ void Machine::Spawn(const std::string& machine, const Address& destination,
   Send(server, s);
 }
 
-void Machine::CheckChildren(
-    const std::chrono::time_point<std::chrono::system_clock> now) {
+void Machine::CheckChildren(const std::chrono::system_clock::time_point now) {
   std::vector<std::string> dead;
   for (const auto& [k, v] : spawned_) {
-    if (const auto d = now - v.second;
-        d > std::chrono::seconds(kHeartbeatTimeout)) {
+    if (const auto d = now - v.second; d > kHeartbeatTimeout) {
       dead.push_back(k);
     }
   }
@@ -213,8 +197,9 @@ void Machine::CheckChildren(
       const auto k = it->first;
       const auto v = it->second;
 
+      Address address;
       std::istringstream iss(k);
-      iss >> address_;
+      iss >> address;
 
       {
         // Send errored message
@@ -222,10 +207,7 @@ void Machine::CheckChildren(
         oss << "errored ";
         oss << v.first;
         oss << " heartbeat timeout";
-        const auto s = oss.str();
-        s.copy(buffer_, s.size());
-        buffer_[s.size()] = 0;
-        HandleMessage(now);
+        HandleMessage(now, address, oss.str());
       }
 
       {
@@ -233,10 +215,7 @@ void Machine::CheckChildren(
         std::ostringstream oss;
         oss << "exited ";
         oss << v.first;
-        const auto s = oss.str();
-        s.copy(buffer_, s.size());
-        buffer_[s.size()] = 0;
-        HandleMessage(now);
+        HandleMessage(now, address, oss.str());
       }
     }
   }
@@ -244,8 +223,7 @@ void Machine::CheckChildren(
 
 void Machine::SendPulse() { Send(parent_, "pulsed " + name_); }
 
-void Machine::SendScheduled(
-    const std::chrono::time_point<std::chrono::system_clock> now) {
+void Machine::SendScheduled(const std::chrono::system_clock::time_point now) {
   std::vector<ScheduledMessage> q;
   q.swap(queue_);
   for (const auto& e : q) {
@@ -257,58 +235,52 @@ void Machine::SendScheduled(
   }
 }
 
-void Machine::ReceiveMessage(
-    const std::chrono::time_point<std::chrono::system_clock> now) {
-  if (const auto result = socket_.Receive(sender_, buffer_, kMaxPayload);
-      result < 0) {
-    if (errno == EAGAIN) {
-      return;
-    }
-    ::Error() << uid_ << ": Failed to receive packet: " << std::strerror(errno)
-              << '\n'
-              << std::flush;
-
-    return;
+void Machine::ReceiveMessage(const std::chrono::system_clock::time_point now) {
+  Address sender;
+  std::string message;
+  if (mailbox_->Receive(sender, message)) {
+    HandleMessage(now, sender, message);
   }
-  HandleMessage(now);
 }
 
-void Machine::HandleMessage(
-    const std::chrono::time_point<std::chrono::system_clock> now) {
-  Info() << uid_ << " < " << sender_ << ' ' << buffer_ << '\n' << std::flush;
-  std::istringstream iss(buffer_);
-  std::string m;
-  iss >> m;
+void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
+                            const Address& from, const std::string& message) {
+  Info() << uid_ << " < " << from << ' ' << message << '\n' << std::flush;
+
+  std::istringstream iss(message);
+  std::string t;
+  iss >> t;
 
   // Supervision
   std::ostringstream oss;
-  oss << sender_;
+  oss << from;
   const auto key = oss.str();
-  if (m == "started") {
+  if (t == "started") {
     // Start tracking spawned health
     std::string name;
     iss >> name;
     spawned_.emplace(key, std::make_pair(name, now));
     // Seek back to start of name to make it available to the message handler.
     iss.seekg(-name.length(), std::ios_base::cur);
-  } else if (m == "exited") {
+  } else if (t == "exited") {
     spawned_.erase(key);
-  } else if (m == "pulsed") {
+  } else if (t == "pulsed") {
     if (auto it = spawned_.find(key); it != spawned_.end()) {
       it->second.second = now;
     }
   }
 
+  // Receivers
   auto s = current_;
   while (!s.empty()) {
     if (const auto it = states_.find(s); it != states_.end()) {
       const auto rs = it->second.receivers_;
-      if (const auto i = rs.find(m); i != rs.end()) {
-        i->second(sender_, iss);
+      if (const auto i = rs.find(t); i != rs.end()) {
+        i->second(from, iss);
         return;
       } else if (const auto i = rs.find(""); i != rs.end()) {
-        std::istringstream iss(buffer_);
-        i->second(sender_, iss);
+        std::istringstream iss(message);
+        i->second(from, iss);
         return;
       } else {
         // Message not handled by state, try parent
@@ -321,7 +293,7 @@ void Machine::HandleMessage(
   }
   // Message not handled by hierarchy
   ::Error() << uid_ << ": Failed to handle message\n" << std::flush;
-  Error("Unhandled message: " + m);
+  Error("Unhandled message: " + t);
 }
 
 void Machine::RegisterMachine(const std::string& machine, const int pid) {

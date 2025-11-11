@@ -1,11 +1,26 @@
-#ifndef CONSTANTS_TEST_H
-#define CONSTANTS_TEST_H
+// Copyright 2022-2025 Stuart Scott
+#ifndef TEST_INCLUDE_WINKTEST_CONSTANTS_H_
+#define TEST_INCLUDE_WINKTEST_CONSTANTS_H_
+
+#include <Wink/constants.h>
+
+#include <string>
 
 // Constants for Testing
-constexpr ushort kTestPort = 42424;
-constexpr ushort kTestPID = 2424;
-const std::string kTestIP = "12.34.56.78";
-const std::string kTestBinary = "wink.bin";
-const std::string kTestMessage = "test 1234";
+constexpr ushort kMaxTestPayload(20);
+constexpr ushort kTestPort(42424);
+constexpr ushort kTestPID(2424);
 
-#endif
+constexpr std::string kTestIP("12.34.56.78");
+constexpr std::string kTestBinary("wink.bin");
+constexpr std::string kTestMessage("test 1234");
+
+constexpr char kTestPacket[] = {'\0', '\0', '\0', '\0', 't', 'e', 's',
+                                't',  ' ',  '1',  '2',  '3', '4'};
+constexpr char kTestAck[] = {'\0', '\0', '\0', '\0', 'a', 'c', 'k'};
+
+constexpr ssize_t kTestPacketLength(sizeof(kTestPacket) /
+                                    sizeof(kTestPacket[0]));
+constexpr ssize_t kTestAckLength(sizeof(kTestAck) / sizeof(kTestAck[0]));
+
+#endif  // TEST_INCLUDE_WINKTEST_CONSTANTS_H_

@@ -1,25 +1,13 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/client.h>
 
-int StartMachine(Socket& socket, Address& address, const std::string& machine,
+#include <string>
+#include <vector>
+
+int StartMachine(Mailbox& mailbox, Address& address, const std::string& machine,
                  Address& destination, const std::vector<std::string> args,
                  const bool follow) {
-  // Bind to address
-  if (const auto result = socket.Bind(address); result < 0) {
-    Error() << "Failed to bind to address: " << address << " : "
-            << std::strerror(errno) << '\n'
-            << std::flush;
-    return result;
-  }
-
   Info() << "Address: " << address << '\n' << std::flush;
-
-  // Set Receive Timeout
-  if (const auto result = socket.SetReceiveTimeout(kHeartbeatTimeout);
-      result < 0) {
-    Error() << "Failed to set receive timeout: " << std::strerror(errno) << '\n'
-            << std::flush;
-    return result;
-  }
 
   // Send Request
   Address server(destination.ip(), kServerPort);
@@ -33,20 +21,18 @@ int StartMachine(Socket& socket, Address& address, const std::string& machine,
     oss << a;
   }
   const auto request = oss.str();
-  if (const auto result = SendMessage(socket, server, request); result < 0) {
-    return result;
-  }
+  SendMessage(mailbox, server, request);
 
   // Recieve Reply
-  char buffer[kMaxPayload];
-  if (const auto result = socket.Receive(destination, buffer, kMaxPayload);
-      result < 0) {
-    Error() << "Failed to receive packet: " << std::strerror(errno) << '\n'
+  std::string message;
+  if (!ReceiveMessage(mailbox, destination, message)) {
+    Error() << "Failed to receive \"started\" message: " << std::strerror(errno)
+            << '\n'
             << std::flush;
-    return result;
+    return -1;
   }
-  Info() << "< " << destination << ' ' << buffer << '\n' << std::flush;
-  std::istringstream iss(buffer);
+  Info() << "< " << destination << ' ' << message << '\n' << std::flush;
+  std::istringstream iss(message);
   std::string command;
   iss >> command;
   if (command != "started") {
@@ -69,21 +55,11 @@ int StartMachine(Socket& socket, Address& address, const std::string& machine,
   }
 
   while (follow) {
-    if (const auto result = socket.Receive(destination, buffer, kMaxPayload);
-        result < 0) {
-      if (errno == EAGAIN) {
-        Info() << "< " << destination << " errored " << machine
-               << " heartbeat timeout\n";
-        Info() << "< " << destination << " exited " << machine << '\n'
-               << std::flush;
-        return -1;
-      }
-      Error() << "Failed to receive packet: " << std::strerror(errno) << '\n'
-              << std::flush;
-      return result;
+    if (!mailbox.Receive(destination, message)) {
+      continue;
     }
-    Info() << "< " << destination << ' ' << buffer << '\n' << std::flush;
-    std::istringstream iss(buffer);
+    Info() << "< " << destination << ' ' << message << '\n' << std::flush;
+    std::istringstream iss(message);
     std::string command;
     iss >> command;
     if (command == "exited") {
@@ -93,60 +69,42 @@ int StartMachine(Socket& socket, Address& address, const std::string& machine,
   return 0;
 }
 
-int StopMachine(Socket& socket, const Address& address) {
+int StopMachine(Mailbox& mailbox, const Address& address) {
   Address server(address.ip(), kServerPort);
   std::ostringstream oss;
   oss << "stop ";
   oss << address.port();
-  return SendMessage(socket, server, oss.str());
-}
-
-int SendMessage(Socket& socket, const Address& address, const std::string& m) {
-  Info() << "> " << address << ' ' << m << '\n' << std::flush;
-  if (const auto result = socket.Send(address, m.c_str(), m.length() + 1);
-      result < 0) {
-    Error() << "Failed to send packet: " << std::strerror(errno) << '\n'
-            << std::flush;
-    return result;
-  }
+  SendMessage(mailbox, server, oss.str());
   return 0;
 }
 
-int ListMachines(Socket& socket, const Address& server) {
-  Address address;
+void SendMessage(Mailbox& mailbox, const Address& to,
+                 const std::string& message) {
+  Info() << "> " << to << ' ' << message << '\n' << std::flush;
+  mailbox.Send(to, message);
+}
 
-  // Bind to address
-  if (const auto result = socket.Bind(address); result < 0) {
-    Error() << "Failed to bind to address: " << address << " : "
-            << std::strerror(errno) << '\n'
-            << std::flush;
-    return result;
+bool ReceiveMessage(Mailbox& mailbox, Address& from, std::string& message) {
+  bool success = false;
+  for (int i = 0; i < kMaxRetries && !success; i++) {
+    success = mailbox.Receive(from, message);
   }
+  return success;
+}
 
-  Info() << "Address: " << address << '\n' << std::flush;
-
-  // Set Receive Timeout
-  if (const auto result = socket.SetReceiveTimeout(kHeartbeatTimeout);
-      result < 0) {
-    Error() << "Failed to set receive timeout: " << std::strerror(errno) << '\n'
-            << std::flush;
-    return result;
-  }
-
+int ListMachines(Mailbox& mailbox, const Address& server) {
   // Send Request
-  if (const auto result = SendMessage(socket, server, "list"); result < 0) {
-    return result;
-  }
+  SendMessage(mailbox, server, "list");
 
   // Recieve Reply
   Address from;
-  char buffer[kMaxPayload];
-  if (const auto result = socket.Receive(from, buffer, kMaxPayload);
-      result < 0) {
-    Error() << "Failed to receive packet: " << std::strerror(errno) << '\n'
+  std::string message;
+  if (!ReceiveMessage(mailbox, from, message)) {
+    Error() << "Failed to receive \"list\" message: " << std::strerror(errno)
+            << '\n'
             << std::flush;
-    return result;
+    return -1;
   }
-  Info() << "< " << from << ' ' << buffer << '\n' << std::flush;
+  Info() << "< " << from << ' ' << message << '\n' << std::flush;
   return 0;
 }

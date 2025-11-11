@@ -1,5 +1,6 @@
-#ifndef ADDRESS_H
-#define ADDRESS_H
+// Copyright 2022-2025 Stuart Scott
+#ifndef INCLUDE_WINK_ADDRESS_H_
+#define INCLUDE_WINK_ADDRESS_H_
 
 #include <Wink/constants.h>
 #include <Wink/log.h>
@@ -14,7 +15,7 @@
 class Address {
  public:
   Address() : ip_(kLocalhost), port_(0) {}
-  Address(std::string address) { FromString(address); }
+  explicit Address(std::string address) { FromString(address); }
   Address(std::string ip, ushort port) : ip_(ip), port_(port) {}
   Address(const Address& address) {
     ip_ = address.ip_;
@@ -67,4 +68,4 @@ class Address {
 std::istream& operator>>(std::istream& is, Address& address);
 std::ostream& operator<<(std::ostream& os, const Address& address);
 
-#endif
+#endif  // INCLUDE_WINK_ADDRESS_H_

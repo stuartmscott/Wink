@@ -1,3 +1,4 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/log.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -8,6 +9,7 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 std::ostream& Error() {
   std::cerr << "Error: ";

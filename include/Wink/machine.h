@@ -1,28 +1,36 @@
-#ifndef MACHINE_H
-#define MACHINE_H
+// Copyright 2022-2025 Stuart Scott
+#ifndef INCLUDE_WINK_MACHINE_H_
+#define INCLUDE_WINK_MACHINE_H_
 
 #include <Wink/address.h>
 #include <Wink/client.h>
 #include <Wink/log.h>
-#include <Wink/socket.h>
+#include <Wink/mailbox.h>
 #include <Wink/state.h>
+#include <unistd.h>
 
-#include <chrono>
 #include <fstream>
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 class Machine {
  public:
-  Machine(std::string name, Socket& socket, Address& address, Address& parent)
-      : name_(name), socket_(socket), address_(address), parent_(parent) {}
+  Machine(std::string name, Address& address, Address& parent)
+      : Machine(name, new AsyncMailbox(new UDPSocket(address)), address,
+                parent) {}
+  Machine(std::string name, Mailbox* mailbox, Address& address, Address& parent)
+      : name_(name), mailbox_(mailbox), address_(address), parent_(parent) {}
   Machine(const Machine& m) = delete;
   Machine(Machine&& m) = delete;
   Machine& operator=(const Machine& m) = delete;
   Machine& operator=(Machine&& m) = delete;
-  ~Machine() {}
+  ~Machine() { delete mailbox_; }
   /**
    * Returns this Machine's Unique Identifier.
    */
@@ -63,7 +71,7 @@ class Machine {
    * Sends the given address the message at the given time.
    */
   void SendAt(const Address& to, const std::string& message,
-              const std::chrono::time_point<std::chrono::system_clock> time);
+              const std::chrono::system_clock::time_point time);
   /**
    * Sends the given address the message after the given delay.
    */
@@ -91,41 +99,35 @@ class Machine {
   std::function<void()> on_exit_ = []() { _exit(0); };
 
  private:
-  void CheckChildren(
-      const std::chrono::time_point<std::chrono::system_clock> now);
+  void CheckChildren(const std::chrono::system_clock::time_point now);
   void SendPulse();
-  void SendScheduled(
-      const std::chrono::time_point<std::chrono::system_clock> now);
-  void ReceiveMessage(
-      const std::chrono::time_point<std::chrono::system_clock> now);
-  void HandleMessage(
-      const std::chrono::time_point<std::chrono::system_clock> now);
+  void SendScheduled(const std::chrono::system_clock::time_point now);
+  void ReceiveMessage(const std::chrono::system_clock::time_point now);
+  void HandleMessage(const std::chrono::system_clock::time_point now,
+                     const Address& from, const std::string& message);
   void RegisterMachine(const std::string& machine, const int pid);
   void UnregisterMachine();
   std::vector<std::string> StateLineage(const std::string& state);
 
   std::string name_;
-  Socket& socket_;
+  Mailbox* mailbox_;
   Address& address_;
   Address& parent_;
   std::string uid_;
   bool running_ = true;
-  Address sender_;
-  char buffer_[kMaxPayload];
   std::map<const std::string, State> states_;
   std::string current_;
   struct ScheduledMessage {
     const Address& address_;
     const std::string message_;
-    const std::chrono::time_point<std::chrono::system_clock> time_;
+    const std::chrono::system_clock::time_point time_;
   };
   std::vector<ScheduledMessage> queue_;
   std::map<const std::string,
-           std::pair<const std::string,
-                     std::chrono::time_point<std::chrono::system_clock>>>
+           std::pair<const std::string, std::chrono::system_clock::time_point>>
       spawned_;
 };
 
 std::pair<std::string, std::string> ParseMachineName(const std::string& name);
 
-#endif
+#endif  // INCLUDE_WINK_MACHINE_H_

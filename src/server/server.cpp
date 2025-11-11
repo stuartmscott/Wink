@@ -1,6 +1,11 @@
+// Copyright 2022-2025 Stuart Scott
 #include <Wink/server/server.h>
 
+#include <string>
+#include <vector>
+
 int Server::Serve(const std::string& directory) {
+  running_ = true;
   if (!log_.empty()) {
     if (const auto result = LogToFile(log_, "server"); result < 0) {
       Error() << "Failed to setup logging\n" << std::flush;
@@ -10,35 +15,17 @@ int Server::Serve(const std::string& directory) {
 
   Info() << "Directory: " << directory << '\n';
 
-  // Bind to address
-  if (const auto result = socket_.Bind(address_); result < 0) {
-    Error() << "Failed to bind to address: " << address_ << " : "
-            << std::strerror(errno) << '\n'
-            << std::flush;
-    return result;
-  }
-
   Info() << "Address: " << address_ << '\n' << std::flush;
 
-  // Set Receive Timeout
-  if (const auto result = socket_.SetReceiveTimeout(kNoTimeout); result < 0) {
-    Error() << "Failed to set receive timeout: " << std::strerror(errno) << '\n'
-            << std::flush;
-    return result;
-  }
-
-  char buffer[kMaxPayload];
   Address sender;
-  while (1) {
-    if (const auto result = socket_.Receive(sender, buffer, kMaxPayload);
-        result < 0) {
-      Error() << "Failed to receive packet: " << std::strerror(errno) << '\n'
-              << std::flush;
-      return -1;
+  std::string message;
+  while (running_) {
+    if (!mailbox_.Receive(sender, message)) {
+      continue;
     }
-    Info() << "< " << sender << ' ' << buffer << '\n' << std::flush;
+    Info() << "< " << sender << ' ' << message << '\n' << std::flush;
 
-    std::istringstream iss(buffer);
+    std::istringstream iss(message);
     std::string command;
     iss >> command;
     if (command == "start") {
@@ -112,19 +99,13 @@ int Server::Serve(const std::string& directory) {
         Error() << "Unrecognized port " << sender.port() << '\n' << std::flush;
       }
     } else if (command == "list") {
-      // List Machines
-      std::ostringstream oss;
-      oss << "Port,Machine,PID\n";
-      for (const auto& [k, v] : machines_) {
-        oss << k << ',' << v << ',' << pids_[k] << '\n';
-      }
-      const auto s = oss.str();
-      if (const auto result = SendMessage(socket_, sender, s); result < 0) {
-        return result;
-      }
+      SendMessage(mailbox_, sender, List());
     } else {
-      Error() << "Failed to parse " << buffer << '\n' << std::flush;
+      Error() << "Failed to parse " << message << '\n' << std::flush;
     }
+  }
+
+  while (!mailbox_.Flushed()) {
   }
 
   return 0;
@@ -174,7 +155,8 @@ int Server::Start(const std::string& binary,
 
       if (result < 0) {
         Error() << "Failed to execute binary: " << parameters.at(0) << ": "
-                << std::strerror(errno) << '\n'
+                << binary << ": " << result << ": " << std::strerror(errno)
+                << '\n'
                 << std::flush;
         return result;
       }
@@ -184,7 +166,7 @@ int Server::Start(const std::string& binary,
       // Parent does nothing
       Info() << "Forked: " << pid << '\n' << std::flush;
   }
-  return 0;
+  return pid;
 }
 
 int Server::Stop(int port) {
@@ -202,3 +184,14 @@ int Server::Stop(int port) {
   }
   return pid;
 }
+
+std::string Server::List() {
+  std::ostringstream oss;
+  oss << "Port,PID,Machine\n";
+  for (const auto& [k, v] : machines_) {
+    oss << k << ',' << pids_[k] << ',' << v << '\n';
+  }
+  return oss.str();
+}
+
+void Server::Shutdown() { running_ = false; }

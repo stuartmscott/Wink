@@ -1,8 +1,10 @@
-#ifndef STATE_H
-#define STATE_H
+// Copyright 2022-2025 Stuart Scott
+#ifndef INCLUDE_WINK_STATE_H_
+#define INCLUDE_WINK_STATE_H_
 
 #include <functional>
 #include <map>
+#include <string>
 
 typedef std::function<void()> Trigger;
 typedef std::function<void(const Address&, std::istream&)> Receiver;
@@ -41,4 +43,4 @@ class State {
   const ReceiverMap receivers_;
 };
 
-#endif
+#endif  // INCLUDE_WINK_STATE_H_

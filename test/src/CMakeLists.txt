@@ -8,11 +8,12 @@ set(TARGET_NAME WinkTests)
 
 set(SOURCE
   "address.cpp"
+  "async_mailbox.cpp"
   "client.cpp"
   "machine.cpp"
+  "mailbox.cpp"
   "server.cpp"
   "socket.cpp"
-  "udp.cpp"
 )
 
 set(INCLUDE_DIR
