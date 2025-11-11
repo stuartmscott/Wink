@@ -132,7 +132,9 @@ void Machine::Transition(const std::string& state) {
   for (const auto& s : current_lineage) {
     states_.at(s).on_exit_();
   }
+
   current_ = state;
+
   // Enter new state hierarchy
   for (const auto& s : next_lineage) {
     states_.at(s).on_enter_();
