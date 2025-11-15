@@ -7,23 +7,24 @@
 int Server::Serve(const std::string& directory) {
   running_ = true;
   if (!log_.empty()) {
+    Info() << "Log: " << log_ << std::endl;
     if (const auto result = LogToFile(log_, "server"); result < 0) {
-      Error() << "Failed to setup logging\n" << std::flush;
+      Error() << "Failed to setup logging" << std::endl;
       return -1;
     }
   }
 
-  Info() << "Directory: " << directory << '\n';
-
-  Info() << "Address: " << address_ << '\n' << std::flush;
+  Info() << "Directory: " << directory << std::endl;
+  Info() << "Address: " << address_ << std::endl;
 
   Address sender;
   std::string message;
   while (running_) {
+    Info() << "Loop: " << running_ << std::endl;
     if (!mailbox_.Receive(sender, message)) {
       continue;
     }
-    Info() << "< " << sender << ' ' << message << '\n' << std::flush;
+    Info() << "< " << sender << ' ' << message << std::endl;
 
     std::istringstream iss(message);
     std::string command;
@@ -49,6 +50,11 @@ int Server::Serve(const std::string& directory) {
       // ie. <directory>/<name>
       std::filesystem::path filepath(directory);
       filepath /= ParseMachineName(name).first;
+      filepath = std::filesystem::absolute(filepath);
+
+      Info() << "Current Path: " << std::filesystem::current_path()
+             << std::endl;
+      Info() << "Binary Path: " << filepath << std::endl;
 
       // Create parameter list
       std::vector<std::string> parameters;
@@ -73,14 +79,14 @@ int Server::Serve(const std::string& directory) {
 
       if (const auto result = Start(filepath.string(), parameters);
           result < 0) {
-        Error() << "Failed to start process\n" << std::flush;
+        Error() << "Failed to start process" << std::endl;
         return result;
       }
     } else if (command == "stop") {
-      ushort port;
+      uint16_t port;
       iss >> port;
       if (const auto result = Stop(port); result < 0) {
-        Error() << "Failed to stop process\n" << std::flush;
+        Error() << "Failed to stop process" << std::endl;
         return result;
       }
     } else if (command == "register") {
@@ -88,20 +94,20 @@ int Server::Serve(const std::string& directory) {
       iss >> machine;
       int pid;
       iss >> pid;
-      machines_.insert(std::pair<ushort, std::string>(sender.port(), machine));
-      pids_.insert(std::pair<ushort, int>(sender.port(), pid));
+      machines_.emplace(sender.port(), machine);
+      pids_.emplace(sender.port(), pid);
     } else if (command == "unregister") {
       if (const auto it = pids_.find(sender.port()); it != pids_.end()) {
         // remove port from machines and pids maps
         machines_.erase(sender.port());
         pids_.erase(sender.port());
       } else {
-        Error() << "Unrecognized port " << sender.port() << '\n' << std::flush;
+        Error() << "Unrecognized port " << sender.port() << std::endl;
       }
     } else if (command == "list") {
       SendMessage(mailbox_, sender, List());
     } else {
-      Error() << "Failed to parse " << message << '\n' << std::flush;
+      Error() << "Failed to parse " << message << std::endl;
     }
   }
 
@@ -111,14 +117,14 @@ int Server::Serve(const std::string& directory) {
   return 0;
 }
 
-int Server::Start(const std::string& binary,
-                  const std::vector<std::string>& parameters) {
+pid_t Server::Start(const std::string& binary,
+                    const std::vector<std::string>& parameters) {
   // Fork child process
   pid_t pid;
   switch (pid = fork()) {
     case -1:
-      Error() << "Failed to fork process: " << std::strerror(errno) << '\n'
-              << std::flush;
+      Error() << "Failed to fork process: " << std::strerror(errno)
+              << std::endl;
       return -1;
     case 0: {
       // Child runs machine process
@@ -127,49 +133,61 @@ int Server::Start(const std::string& binary,
         std::replace(s.begin(), s.end(), '/', '_');
         std::replace(s.begin(), s.end(), '#', '_');
         if (const auto result = LogToFile(log_, s); result < 0) {
-          Error() << "Failed to setup logging\n" << std::flush;
+          Error() << "Failed to setup logging" << std::endl;
           return -1;
         }
       }
 
-      const auto length = parameters.size();
-      const auto args = new char*[length + 1];
-      args[length] = NULL;
+      const auto length = parameters.size() + 2;
+      Info() << "Allocating char*[" << length << ']' << std::endl;
+      const auto args = new char*[length];
 
-      uint i = 0;
-      for (const auto& p : parameters) {
-        const auto l = p.length() + 1;
-        const auto c = p.c_str();
+      // Binary name
+      {
+        auto b = binary.c_str();
+        auto l = binary.length() + 1;
+        Info() << "Allocating char[" << l << "] for " << binary << std::endl;
         auto a = new char[l];
-        strncpy(a, c, l);
-        args[i] = a;
-        i++;
+        strncpy(a, b, l);
+        args[0] = a;
+      }
+
+      // Parameters
+      {
+        uint32_t i = 1;
+        for (const auto& p : parameters) {
+          const auto l = p.length() + 1;
+          const auto c = p.c_str();
+          Info() << "Allocating char[" << l << "] for " << p << std::endl;
+          auto a = new char[l];
+          strncpy(a, c, l);
+          args[i] = a;
+          i++;
+        }
+      }
+
+      // End pointer
+      {
+        args[length - 1] = NULL;
       }
 
       const auto result = execv(binary.c_str(), args);
 
-      for (i = 0; i < length; i++) {
-        delete[] args[i];
-      }
-      delete[] args;
-
       if (result < 0) {
         Error() << "Failed to execute binary: " << parameters.at(0) << ": "
                 << binary << ": " << result << ": " << std::strerror(errno)
-                << '\n'
-                << std::flush;
-        return result;
+                << std::endl;
       }
-      _exit(0);
+      _exit(result);
     }
     default:
       // Parent does nothing
-      Info() << "Forked: " << pid << '\n' << std::flush;
+      Info() << "Forked: " << pid << std::endl;
   }
   return pid;
 }
 
-int Server::Stop(int port) {
+pid_t Server::Stop(uint16_t port) {
   int pid = 0;
   if (const auto it = pids_.find(port); it != pids_.end()) {
     pid = it->second;
@@ -193,5 +211,3 @@ std::string Server::List() {
   }
   return oss.str();
 }
-
-void Server::Shutdown() { running_ = false; }

@@ -7,7 +7,6 @@
 
 #include <string>
 
-// Paths assume tests were executed from inside build/test/src
 TEST(ServerTest, Registration) {
   Address server_address(kLocalhost, kServerPort);
   AsyncMailbox server_mailbox(new UDPSocket(server_address));
@@ -81,9 +80,10 @@ TEST(ServerTest, StartListStop) {
   // Start Machine
   client_mailbox.Send(server_address, "start time/After#foobar :42424");
 
+  sleep(1);
+
   // Assert Machine Started
   ASSERT_TRUE(client_mailbox.Receive(from, message));
-  Info() << "Received: " << from << ": " << message << '\n' << std::flush;
   ASSERT_EQ(kLocalhost, from.ip());
   ASSERT_EQ(42424, from.port());
   ASSERT_EQ("started time/After#foobar", message);

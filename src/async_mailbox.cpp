@@ -4,6 +4,8 @@
 #include <Wink/socket.h>
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <string>
 
 AsyncMailbox::AsyncMailbox(Socket* socket)
@@ -38,14 +40,14 @@ bool AsyncMailbox::Receive(Address& from, std::string& message) {
   }
 
   const auto& in = incoming_messages_.front();
-  from = in.address_;
-  message = in.message_;
+  from = in.address;
+  message = in.message;
   incoming_messages_.pop_front();
   return true;
 }
 
 void AsyncMailbox::Send(const Address& to, const std::string& message) {
-  uint seq_num = 0;
+  uint64_t seq_num = 0;
   if (const auto& it = outgoing_seq_nums_.find(to);
       it != outgoing_seq_nums_.end()) {
     it->second++;
@@ -67,30 +69,31 @@ bool AsyncMailbox::Flushed() {
 
 void AsyncMailbox::BackgroundReceive() {
   Address from;
-  ssize_t length = socket_->Receive(from, receive_buffer_);
-  if (length <= 0) {
+  size_t length;
+  if (!socket_->Receive(from, receive_buffer_, length)) {
     return;
   }
-  if (length > 0 && receive_buffer_[length - 1] == '\n') {
+  while (receive_buffer_[length - 1] == '\n') {
     --length;
   }
-  if (length < sizeof(uint)) {
-    Error() << "Message too small: " << length << '\n' << std::flush;
+  if (length < sizeof(uint64_t)) {
+    Error() << "Message too small: " << length << std::endl;
     return;
   }
 
   // Parse sequence number
-  uint seq_num;
-  std::memcpy(&seq_num, receive_buffer_, sizeof(uint));
+  uint64_t seq_num;
+  std::memcpy(&seq_num, receive_buffer_, sizeof(uint64_t));
 
-  std::string message(receive_buffer_ + sizeof(uint), length - sizeof(uint));
+  std::string message(receive_buffer_ + sizeof(uint64_t),
+                      length - sizeof(uint64_t));
 
   if (message == "ack") {
     // Remove associated message from outgoing_messages_
     std::scoped_lock lock(outgoing_mutex_);
     for (auto it = outgoing_messages_.begin();
          it != outgoing_messages_.end();) {
-      if (it->address_ == from && it->seq_num_ == seq_num) {
+      if (it->address == from && it->seq_num == seq_num) {
         outgoing_messages_.erase(it);
         outgoing_condition_.notify_all();
         return;
@@ -101,22 +104,20 @@ void AsyncMailbox::BackgroundReceive() {
   } else {
     // Send acknowledgement
     {
-      // receive_buffer_[0:3] alreadycontains seq_num
-      receive_buffer_[4] = 'a';
-      receive_buffer_[5] = 'c';
-      receive_buffer_[6] = 'k';
-      if (!socket_->Send(from, receive_buffer_, 7)) {
+      // receive_buffer_[0:7] alreadycontains seq_num
+      receive_buffer_[8] = 'a';
+      receive_buffer_[9] = 'c';
+      receive_buffer_[10] = 'k';
+      if (!socket_->Send(from, receive_buffer_, sizeof(uint64_t) + 3)) {
         Error() << "Failed to acknowledge " << from << ": "
-                << std::strerror(errno) << '\n'
-                << std::flush;
+                << std::strerror(errno) << std::endl;
       }
     }
 
     if (const auto& it = incoming_seq_nums_.find(from);
         it != incoming_seq_nums_.end()) {
       if (seq_num <= it->second) {
-        Info() << "Dropping duplicate message: " << seq_num << '\n'
-               << std ::flush;
+        Info() << "Dropping duplicate message: " << seq_num << std ::endl;
         // Drop duplicate packet
         // TODO handle sequence number overflow and wrap around
         return;
@@ -143,30 +144,28 @@ void AsyncMailbox::BackgroundSend() {
 
   const auto now = std::chrono::system_clock::now();
   for (auto it = outgoing_messages_.begin(); it != outgoing_messages_.end();) {
-    if (it->attempts_ >= kMaxRetries) {
-      Error() << "Failed to deliver to " << it->address_ << " failed after "
-              << it->attempts_ << " attempts\n"
-              << std::flush;
+    if (it->attempts >= kMaxRetries) {
+      Error() << "Failed to deliver to " << it->address << " failed after "
+              << it->attempts << " attempts" << std::endl;
       it = outgoing_messages_.erase(it);
       continue;
     }
 
-    const auto deadline = it->time_ + it->attempts_ * kReceiveTimeout;
+    const auto deadline = it->time + it->attempts * kReceiveTimeout;
     if (now >= deadline) {
       // TODO move out of outgoing_mutex_ lock
-      uint seq_num = it->seq_num_;
-      std::memcpy(send_buffer_, &seq_num, sizeof(uint));
-      const auto length = static_cast<int>(
-          std::min(it->message_.length(), kMaxUDPPayload - sizeof(uint)));
-      std::memcpy(send_buffer_ + sizeof(uint), it->message_.c_str(), length);
-      uint bytes = length + sizeof(uint);
-      if (!socket_->Send(it->address_, send_buffer_, bytes)) {
-        Error() << "Failed to send to " << it->address_ << ": "
-                << std::strerror(errno) << '\n'
-                << std::flush;
+      uint64_t seq_num = it->seq_num;
+      std::memcpy(send_buffer_, &seq_num, sizeof(uint64_t));
+      const auto length =
+          std::min(it->message.length(), kMaxUDPPayload - sizeof(uint64_t));
+      std::memcpy(send_buffer_ + sizeof(uint64_t), it->message.c_str(), length);
+      uint64_t bytes = length + sizeof(uint64_t);
+      if (!socket_->Send(it->address, send_buffer_, bytes)) {
+        Error() << "Failed to send to " << it->address << ": "
+                << std::strerror(errno) << std::endl;
       }
 
-      it->attempts_++;
+      it->attempts++;
     }
     it++;
   }

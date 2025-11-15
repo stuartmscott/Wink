@@ -121,13 +121,13 @@ TEST(MachineTest, Start_InitialState) {
       // On Entry Action
       [&m, &firstOnEntry]() {
         firstOnEntry++;
-        Info() << "firstOnEntry: " << firstOnEntry << '\n' << std::flush;
+        Info() << "firstOnEntry: " << firstOnEntry << std::endl;
         m.Exit();
       },
       // On Exit Action
       [&firstOnExit]() {
         firstOnExit++;
-        Info() << "firstOnExit: " << firstOnExit << '\n' << std::flush;
+        Info() << "firstOnExit: " << firstOnExit << std::endl;
       },
       // Receivers
       {}));
@@ -139,13 +139,13 @@ TEST(MachineTest, Start_InitialState) {
       // On Entry Action
       [&m, &secondOnEntry]() {
         secondOnEntry++;
-        Info() << "secondOnEntry: " << secondOnEntry << '\n' << std::flush;
+        Info() << "secondOnEntry: " << secondOnEntry << std::endl;
         m.Transition("first");
       },
       // On Exit Action
       [&secondOnExit]() {
         secondOnExit++;
-        Info() << "secondOnExit: " << secondOnExit << '\n' << std::flush;
+        Info() << "secondOnExit: " << secondOnExit << std::endl;
       },
       // Receivers
       {}));

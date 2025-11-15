@@ -26,9 +26,8 @@ int LogToFile(const std::string& directory, const std::string& name) {
 
   if (const auto d = directory.c_str(); stat(d, &st) == -1) {
     if (const auto result = mkdir(d, 0777); result < 0) {
-      Error() << "Failed to make log directory: " << std::strerror(errno)
-              << '\n'
-              << std::flush;
+      Error() << "Failed to make log directory: " << directory << ": "
+              << std::strerror(errno) << std::endl;
       return -1;
     }
   }
@@ -47,21 +46,18 @@ int LogToFile(const std::string& directory, const std::string& name) {
   int fd = open(filepath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
   if (fd < 0) {
     Error() << "Failed to open file: " << filepath << ": "
-            << std::strerror(errno) << '\n'
-            << std::flush;
+            << std::strerror(errno) << std::endl;
     return -1;
   }
 
   if (const auto result = dup2(fd, 1); result < 0) {
-    Error() << "Failed to redirect std::cout output to log file\n"
-            << std::flush;
+    Error() << "Failed to redirect std::cout output to log file" << std::endl;
     close(fd);
     return -1;
   }
 
   if (const auto result = dup2(fd, 2); result < 0) {
-    Error() << "Failed to redirect std::cerr output to log file\n"
-            << std::flush;
+    Error() << "Failed to redirect std::cerr output to log file" << std::endl;
     close(fd);
     return -1;
   }

@@ -7,7 +7,7 @@
 int StartMachine(Mailbox& mailbox, Address& address, const std::string& machine,
                  Address& destination, const std::vector<std::string> args,
                  const bool follow) {
-  Info() << "Address: " << address << '\n' << std::flush;
+  Info() << "Address: " << address << std::endl;
 
   // Send Request
   Address server(destination.ip(), kServerPort);
@@ -27,18 +27,16 @@ int StartMachine(Mailbox& mailbox, Address& address, const std::string& machine,
   std::string message;
   if (!ReceiveMessage(mailbox, destination, message)) {
     Error() << "Failed to receive \"started\" message: " << std::strerror(errno)
-            << '\n'
-            << std::flush;
+            << std::endl;
     return -1;
   }
-  Info() << "< " << destination << ' ' << message << '\n' << std::flush;
+  Info() << "< " << destination << ' ' << message << std::endl;
   std::istringstream iss(message);
   std::string command;
   iss >> command;
   if (command != "started") {
     Error() << "Incorrect message received. Expected: \"started\", "
-            << "Got: \"" << command << "\"\n"
-            << std::flush;
+            << "Got: \"" << command << '"' << std::endl;
     return -1;
   }
   auto name_req = ParseMachineName(machine);
@@ -49,8 +47,7 @@ int StartMachine(Mailbox& mailbox, Address& address, const std::string& machine,
   auto bin_res = get<0>(name_req);
   if (bin_res != bin_req) {
     Error() << "Incorrect machine binary started. Expected: \"" << bin_req
-            << "\", Got: \"" << bin_res << "\"\n"
-            << std::flush;
+            << "\", Got: \"" << bin_res << '"' << std::endl;
     return -1;
   }
 
@@ -58,7 +55,7 @@ int StartMachine(Mailbox& mailbox, Address& address, const std::string& machine,
     if (!mailbox.Receive(destination, message)) {
       continue;
     }
-    Info() << "< " << destination << ' ' << message << '\n' << std::flush;
+    Info() << "< " << destination << ' ' << message << std::endl;
     std::istringstream iss(message);
     std::string command;
     iss >> command;
@@ -80,13 +77,13 @@ int StopMachine(Mailbox& mailbox, const Address& address) {
 
 void SendMessage(Mailbox& mailbox, const Address& to,
                  const std::string& message) {
-  Info() << "> " << to << ' ' << message << '\n' << std::flush;
+  Info() << "> " << to << ' ' << message << std::endl;
   mailbox.Send(to, message);
 }
 
 bool ReceiveMessage(Mailbox& mailbox, Address& from, std::string& message) {
   bool success = false;
-  for (int i = 0; i < kMaxRetries && !success; i++) {
+  for (uint8_t i = 0; i < kMaxRetries && !success; i++) {
     success = mailbox.Receive(from, message);
   }
   return success;
@@ -101,10 +98,9 @@ int ListMachines(Mailbox& mailbox, const Address& server) {
   std::string message;
   if (!ReceiveMessage(mailbox, from, message)) {
     Error() << "Failed to receive \"list\" message: " << std::strerror(errno)
-            << '\n'
-            << std::flush;
+            << std::endl;
     return -1;
   }
-  Info() << "< " << from << ' ' << message << '\n' << std::flush;
+  Info() << "< " << from << ' ' << message << std::endl;
   return 0;
 }

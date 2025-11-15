@@ -14,14 +14,14 @@ typedef bool ReceiveArgs;
 
 struct ReceiveResult {
   std::string fromIP;
-  ushort fromPort;
+  uint16_t fromPort;
   std::string message;
   bool result;
 };
 
 struct SendArgs {
   std::string toIP;
-  ushort toPort;
+  uint16_t toPort;
   std::string message;
 };
 
@@ -35,12 +35,13 @@ class MockMailbox : public Mailbox {
   ~MockMailbox() {}
   bool Receive(Address& from, std::string& message) override;
   void Send(const Address& to, const std::string& message) override;
-  bool Flushed() override;
+  bool Flushed() override { return flushed_; }
+
   std::vector<ReceiveArgs> receiveArgs_;
   std::vector<ReceiveResult> receiveResults_;
   std::vector<SendArgs> sendArgs_;
   std::vector<SendResult> sendResults_;
-  bool flushed = true;
+  bool flushed_ = true;
 };
 
 void setup_default_mailbox(MockMailbox& mailbox);

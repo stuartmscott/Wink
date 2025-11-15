@@ -9,68 +9,90 @@
 #include <vector>
 
 void Usage(std::string name) {
-  Info() << name << '\n';
-  Info() << "\tstart [options] <binary> <host>\n";
-  Info() << "\tstop [options] <machine>\n";
-  Info() << "\tsend [options] <machine> <message>\n";
-  Info() << "\tlist [options] <host>\n";
-  Info() << "\thelp\n";
+  Info() << name << std::endl;
+  Info() << "\tstart [options] <binary> <host>" << std::endl;
+  Info() << "\tstop [options] <machine>" << std::endl;
+  Info() << "\tsend [options] <machine> <message>" << std::endl;
+  Info() << "\tlist [options] <host>" << std::endl;
+  Info() << "\thelp" << std::endl;
 }
 
 void Usage() { Usage("Wink"); }
 
 void Help(std::string name, std::string command) {
   if (command == "start") {
-    Info() << "Start a new machine.\n\n";
-    Info() << "Options;";
-    Info() << "\n\t-a\n\t\tThe address to bind to (default " << kLocalhost
-           << ")\n";
-    Info()
-        << "\n\t-f\n\t\tFollow the lifecycle of the machine (default false)\n";
-    Info() << "Parameters;";
-    Info() << "\n\tbinary\n\t\tThe machine binary to start\n";
-    Info() << "\n\thost\n\t\tThe host to start the machine on\n";
-    Info() << "Examples;";
-    Info() << "\n\tstart machine.bin\n\t\tStart a new machine on localhost on "
-              "any available port\n";
-    Info() << "\n\tstart machine.bin :64646\n\t\tStart a new machine on "
-              "localhost port 64646\n";
-    Info() << "\n\tstart machine.bin 123.45.67.89\n\t\tStart a new machine on "
-              "ip 123.45.67.89 any available port\n";
-    Info() << "\n\tstart machine.bin 123.45.67.89:64646\n\t\tStart a new "
-              "machine on ip 123.45.67.89 port 64646\n";
+    Info() << "Start a new machine." << std::endl;
+    Info() << std::endl;
+    Info() << "Options;" << std::endl;
+    Info() << "\t-a" << std::endl;
+    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+           << std::endl;
+    Info() << "\t-f" << std::endl;
+    Info() << "\t\tFollow the lifecycle of the machine (default false)"
+           << std::endl;
+    Info() << "Parameters;" << std::endl;
+    Info() << "\tbinary" << std::endl;
+    Info() << "\t\tThe machine binary to start" << std::endl;
+    Info() << "\thost" << std::endl;
+    Info() << "\t\tThe host to start the machine on" << std::endl;
+    Info() << "Examples;" << std::endl;
+    Info() << "\tstart machine.bin" << std::endl;
+    Info() << "\t\tStart a new machine on localhost on any available port"
+           << std::endl;
+    Info() << "\tstart machine.bin :64646" << std::endl;
+    Info() << "\t\tStart a new machine on localhost port 64646" << std::endl;
+    Info() << "\tstart machine.bin 123.45.67.89" << std::endl;
+    Info() << "\t\tStart a new machine on ip 123.45.67.89 on any available port"
+           << std::endl;
+    Info() << "\tstart machine.bin 123.45.67.89:64646" << std::endl;
+    Info() << "\t\tStart a new machine on ip 123.45.67.89 port 64646"
+           << std::endl;
   } else if (command == "stop") {
-    Info() << "Stop an existing machine.\n\n";
-    Info() << "Options;";
-    Info() << "Parameters;";
-    Info() << "\n\tmachine\n\t\tThe machine to stop\n";
-    Info() << "Examples;";
-    Info() << "\n\tstop 123.45.67.89:64646\n\t\tStop an existing machine on ip "
-              "123.45.67.89 port 64646\n";
+    Info() << "Stop an existing machine." << std::endl;
+    Info() << std::endl;
+    // Info() << "Options;" << std::endl;
+    Info() << "Parameters;" << std::endl;
+    Info() << "\tmachine" << std::endl;
+    Info() << "\t\tThe address of the machine to stop" << std::endl;
+    Info() << "Examples;" << std::endl;
+    Info() << "\tstop 123.45.67.89:64646" << std::endl;
+    Info() << "\t\tStop an existing machine on ip 123.45.67.89 port 64646"
+           << std::endl;
   } else if (command == "send") {
-    Info() << "Sends a message to a machine\n\n";
-    Info() << "Options;";
-    Info() << "\n\t-r\n\t\tThe number of replies to await (default 0)\n";
-    Info() << "Parameters;";
-    Info() << "\n\tmachine\n\t\tThe machine to send to\n";
-    Info() << "\n\tmessage\n\t\tThe message to send\n";
-    Info() << "Examples;";
-    Info() << "\n\tsend :64646 add(2,8)\n\t\tSend a message to machine on "
-              "localhost port 64646\n";
-    Info() << "\n\tsend 123.45.67.89:64646 add(2,8)\n\t\tSend a message to "
-              "machine on ip 123.45.67.89 port 64646\n";
+    Info() << "Sends a message to a machine." << std::endl;
+    Info() << std::endl;
+    Info() << "Options;" << std::endl;
+    Info() << "\t-r" << std::endl;
+    Info() << "\t\tThe number of replies to await (default 0)" << std::endl;
+    Info() << "Parameters;" << std::endl;
+    Info() << "\tmachine" << std::endl;
+    Info() << "\t\tThe address of the machine to send to" << std::endl;
+    Info() << "\tmessage" << std::endl;
+    Info() << "\t\tThe message to send" << std::endl;
+    Info() << "Examples;" << std::endl;
+    Info() << "\tsend :64646 add(2,8)" << std::endl;
+    Info() << "\t\tSend a message to machine on localhost port 64646"
+           << std::endl;
+    Info() << "\tsend 123.45.67.89:64646 add(2,8)" << std::endl;
+    Info() << "\t\tSend a message to machine on ip 123.45.67.89 port 64646"
+           << std::endl;
   } else if (command == "list") {
-    Info() << "List machines running on a host\n\n";
-    Info() << "Options;";
-    Info() << "Parameters;";
-    Info() << "\n\thost\n\t\tThe host to list the machines from\n";
-    Info() << "Examples;";
-    Info()
-        << "\n\tlist\n\t\tLists the machines running on localhost port 42000\n";
-    Info() << "\n\tlist :64646\n\t\tLists the machines running on localhost "
-              "port 64646\n";
-    Info() << "\n\tlist 123.45.67.89:64646\n\t\tLists the machines running on "
-              "ip 123.45.67.89 port 64646\n";
+    Info() << "List machines running on a host." << std::endl;
+    Info() << std::endl;
+    // Info() << "Options;" << std::endl;
+    Info() << "Parameters;" << std::endl;
+    Info() << "\thost" << std::endl;
+    Info() << "\t\tThe host to list the machines from" << std::endl;
+    Info() << "Examples;" << std::endl;
+    Info() << "\tlist" << std::endl;
+    Info() << "\t\tLists the machines running on localhost port 42000"
+           << std::endl;
+    Info() << "\tlist :64646" << std::endl;
+    Info() << "\t\tLists the machines running on localhost port 64646"
+           << std::endl;
+    Info() << "\tlist 123.45.67.89:64646" << std::endl;
+    Info() << "\t\tLists the machines running on ip 123.45.67.89 port 64646"
+           << std::endl;
   } else {
     Usage();
   }
@@ -117,8 +139,7 @@ int main(int argc, char** argv) {
         std::transform(f.begin(), f.end(), f.begin(), ::tolower);
         follow = (f == "1" || f == "true");
       } else {
-        Error() << "Option " << k << ":" << v << " not supported\n"
-                << std::flush;
+        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
       }
     }
 
@@ -126,13 +147,13 @@ int main(int argc, char** argv) {
     std::vector<std::string> args;
     auto count = parameters.size();
     if (count == 0) {
-      Error() << "Missing <binary> parameter\n" << std::flush;
+      Error() << "Missing <binary> parameter" << std::endl;
       return -1;
     }
     std::string binary(parameters.at(0));
     if (count > 1) {
       destination.FromString(parameters.at(1));
-      for (uint i = 2; i < count; i++) {
+      for (uint32_t i = 2; i < count; i++) {
         args.push_back(parameters.at(i));
       }
     }
@@ -142,20 +163,20 @@ int main(int argc, char** argv) {
   } else if (command == "stop") {
     // Parse Options
     for (const auto& [k, v] : options) {
-      Error() << "Option " << k << ":" << v << " not supported\n" << std::flush;
+      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
     }
 
     Address destination(kLocalhost, 0);
     switch (parameters.size()) {
       case 0:
-        Error() << "Missing <machine> parameter\n" << std::flush;
+        Error() << "Missing <machine> parameter" << std::endl;
         return -1;
       case 1: {
         std::istringstream ss(parameters.at(0));
         ss >> destination;
       } break;
       default:
-        Error() << "Too many parameters\n" << std::flush;
+        Error() << "Too many parameters" << std::endl;
         return -1;
     }
 
@@ -163,15 +184,14 @@ int main(int argc, char** argv) {
     AsyncMailbox mailbox(new UDPSocket(address));
     return StopMachine(mailbox, destination);
   } else if (command == "send") {
-    uint replies = 0;
+    uint32_t replies = 0;
     // Parse Options
     for (const auto& [k, v] : options) {
       if (k == "-r") {
         std::stringstream ss(v);
         ss >> replies;
       } else {
-        Error() << "Option " << k << ":" << v << " not supported\n"
-                << std::flush;
+        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
       }
     }
 
@@ -179,10 +199,10 @@ int main(int argc, char** argv) {
     std::string message;
     switch (parameters.size()) {
       case 0:
-        Error() << "Missing <machine> parameter\n" << std::flush;
+        Error() << "Missing <machine> parameter" << std::endl;
         return -1;
       case 1:
-        Error() << "Missing <message> parameter\n" << std::flush;
+        Error() << "Missing <message> parameter" << std::endl;
         return -1;
       case 2: {
         const auto s = parameters.at(0);
@@ -191,7 +211,7 @@ int main(int argc, char** argv) {
         message = parameters.at(1);
       } break;
       default:
-        Error() << "Too many parameters\n" << std::flush;
+        Error() << "Too many parameters" << std::endl;
         return -1;
     }
 
@@ -201,9 +221,9 @@ int main(int argc, char** argv) {
 
     Address from;
     std::string reply;
-    for (uint r = 0; r < replies;) {
+    for (uint32_t r = 0; r < replies;) {
       if (ReceiveMessage(mailbox, from, reply)) {
-        Info() << "< " << from << ' ' << reply << '\n' << std::flush;
+        Info() << "< " << from << ' ' << reply << std::endl;
         r++;
       }
     }
@@ -211,7 +231,7 @@ int main(int argc, char** argv) {
   } else if (command == "list") {
     // Parse Options
     for (const auto& [k, v] : options) {
-      Error() << "Option " << k << ":" << v << " not supported\n" << std::flush;
+      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
     }
 
     Address receiver(kLocalhost, kServerPort);
@@ -224,7 +244,7 @@ int main(int argc, char** argv) {
         ss >> receiver;
       } break;
       default:
-        Error() << "Too many parameters\n" << std::flush;
+        Error() << "Too many parameters" << std::endl;
         return -1;
     }
 

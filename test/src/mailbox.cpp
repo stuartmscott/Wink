@@ -10,7 +10,7 @@ bool MockMailbox::Receive(Address& from, std::string& message) {
   const auto index = receiveArgs_.size();
   receiveArgs_.push_back(true);
   if (index >= receiveResults_.size()) {
-    Error() << "Unexpected call to Receive\n" << std::flush;
+    Error() << "Unexpected call to Receive" << std::endl;
   }
   const auto result = receiveResults_.at(index);
   from.set_ip(result.fromIP);
@@ -27,11 +27,9 @@ void MockMailbox::Send(const Address& to, const std::string& message) {
   args.message = message;
   sendArgs_.push_back(args);
   if (index >= sendResults_.size()) {
-    Error() << "Unexpected call to Send\n" << std::flush;
+    Error() << "Unexpected call to Send" << std::endl;
   }
 }
-
-bool MockMailbox::Flushed() { return flushed; }
 
 void setup_default_mailbox(MockMailbox& mailbox) {
   // Set mock send result

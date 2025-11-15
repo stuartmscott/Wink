@@ -5,8 +5,9 @@
 #include <chrono>
 #include <cstdint>
 
-constexpr uint16_t kMaxUDPPayload = 65507;
-constexpr uint16_t kMaxRetries = 5;
+constexpr size_t kMaxUDPPayload = 65507;
+
+constexpr uint8_t kMaxRetries = 5;
 
 constexpr std::chrono::seconds kNoTimeout(0);  // Unlimited
 constexpr std::chrono::seconds kSendTimeout(1);

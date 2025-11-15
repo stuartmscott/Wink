@@ -61,15 +61,15 @@ If the optional empty receiver exists, it is triggered if no other receivers mat
 #include <Wink/state.h>
 
 int main(int argc, char **argv) {
-  if (argc < 3) {
-    error() << "Incorrect parameters, expected <address> <parent>\n"
+  if (argc < 4) {
+    error() << "Incorrect parameters, expected <name> <address> <parent>\n"
             << std::flush;
     return -1;
   }
 
-  std::string name(argv[0]);
-  Address address(argv[1]);
-  Address parent(argv[2]);
+  std::string name(argv[1]);
+  Address address(argv[2]);
+  Address parent(argv[3]);
   Machine m(name, address, parent);
 
   m.AddState(State(
@@ -140,15 +140,15 @@ When a parent is notified that a child has errored, it can chose to do nothing, 
 #include <Wink/state.h>
 
 int main(int argc, char **argv) {
-  if (argc < 3) {
-    error() << "Incorrect parameters, expected <address> <parent>\n"
+  if (argc < 4) {
+    error() << "Incorrect parameters, expected <name> <address> <parent>\n"
             << std::flush;
     return -1;
   }
 
-  std::string name(argv[0]);
-  Address address(argv[1]);
-  Address parent(argv[2]);
+  std::string name(argv[1]);
+  Address address(argv[2]);
+  Address parent(argv[3]);
   Machine m(name, address, parent);
 
   m.AddState(State(
@@ -215,15 +215,15 @@ int main(int argc, char **argv) {
 #include <Wink/state.h>
 
 int main(int argc, char **argv) {
-  if (argc < 3) {
-    error() << "Incorrect parameters, expected <address> <parent>\n"
+  if (argc < 4) {
+    error() << "Incorrect parameters, expected <name> <address> <parent>\n"
             << std::flush;
     return -1;
   }
 
-  std::string name(argv[0]);
-  Address address(argv[1]);
-  Address parent(argv[2]);
+  std::string name(argv[1]);
+  Address address(argv[2]);
+  Address parent(argv[3]);
   Machine m(name, address, parent);
 
   m.AddState(State(
@@ -308,7 +308,7 @@ cmake --build build
 ## Test
 
 ```
-(cd build/test/src && ctest)
+(cd build && ctest)
 ```
 
 ## Docker

@@ -3,7 +3,7 @@ FROM ubuntu:latest
 EXPOSE 42000/udp
 
 RUN apt-get update -y
-RUN apt-get install -y --no-install-recommends ca-certificates git build-essential cmake
+RUN apt-get install -y --no-install-recommends ca-certificates git build-essential cmake gdb
 
 COPY ./include /Wink/include
 COPY ./samples /Wink/samples
@@ -17,4 +17,4 @@ WORKDIR /Wink
 
 RUN cmake -S . -B build
 RUN cmake --build build
-RUN (cd build/test/src/ && ctest)
+RUN (cd build && ctest --output-on-failure)

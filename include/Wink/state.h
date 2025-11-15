@@ -36,8 +36,8 @@ class State {
   State& operator=(State&& s) = delete;
   ~State() {}
 
-  const std::string name_;
-  const std::string parent_;
+  const std::string name_ = "";
+  const std::string parent_ = "";
   const Trigger on_enter_;
   const Trigger on_exit_;
   const ReceiverMap receivers_;

@@ -16,7 +16,7 @@ class Address {
  public:
   Address() : ip_(kLocalhost), port_(0) {}
   explicit Address(std::string address) { FromString(address); }
-  Address(std::string ip, ushort port) : ip_(ip), port_(port) {}
+  Address(std::string ip, uint16_t port) : ip_(ip), port_(port) {}
   Address(const Address& address) {
     ip_ = address.ip_;
     port_ = address.port_;
@@ -43,9 +43,9 @@ class Address {
   void WriteTo(struct sockaddr_in& address) const;
 
   void set_ip(std::string ip) { ip_ = ip; }
-  void set_port(int port) { port_ = port; }
+  void set_port(uint16_t port) { port_ = port; }
   std::string ip() const { return ip_; }
-  ushort port() const { return port_; }
+  uint16_t port() const { return port_; }
 
   bool operator<(const Address& other) const {
     if (ip_ == other.ip_) {
@@ -61,8 +61,8 @@ class Address {
   bool operator!=(const Address& other) const { return !(*this == other); }
 
  private:
-  std::string ip_;
-  ushort port_;
+  std::string ip_ = kLocalhost;
+  uint16_t port_ = 0;
 };
 
 std::istream& operator>>(std::istream& is, Address& address);

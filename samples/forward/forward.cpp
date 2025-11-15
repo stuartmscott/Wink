@@ -8,19 +8,19 @@
 #include <string>
 
 int main(int argc, char** argv) {
-  if (argc < 4) {
-    Error()
-        << "Incorrect parameters, expected <address> <parent> <destination>\n"
-        << std::flush;
+  if (argc < 5) {
+    Error() << "Incorrect parameters, expected <name> <address> <parent> "
+               "<destination>\n"
+            << std::flush;
     return -1;
   }
 
-  std::string name(argv[0]);
-  Address address(argv[1]);
-  Address parent(argv[2]);
+  std::string name(argv[1]);
+  Address address(argv[2]);
+  Address parent(argv[3]);
   Machine m(name, address, parent);
 
-  Address destination(argv[3]);
+  Address destination(argv[4]);
 
   m.AddState(State(
       // State Name

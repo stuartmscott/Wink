@@ -43,11 +43,11 @@ class AsyncMailbox : public Mailbox {
   void BackgroundReceive();
   void BackgroundSend();
   struct QueuedMessage {
-    std::chrono::system_clock::time_point time_;
-    uint seq_num_;
-    ushort attempts_;
-    Address address_;
-    std::string message_;
+    std::chrono::system_clock::time_point time;
+    uint64_t seq_num;
+    uint8_t attempts;
+    Address address;
+    std::string message;
   };
   Socket* socket_;
   char receive_buffer_[kMaxUDPPayload];
@@ -58,9 +58,9 @@ class AsyncMailbox : public Mailbox {
   std::condition_variable outgoing_condition_;
   std::deque<QueuedMessage> incoming_messages_;
   std::deque<QueuedMessage> outgoing_messages_;
-  std::map<const Address, uint> incoming_seq_nums_;
-  std::map<const Address, uint> outgoing_seq_nums_;
-  std::atomic_bool running_;
+  std::map<const Address, uint64_t> incoming_seq_nums_;
+  std::map<const Address, uint64_t> outgoing_seq_nums_;
+  std::atomic_bool running_ = true;
   std::thread receiver_;
   std::thread sender_;
 };

@@ -109,18 +109,18 @@ class Machine {
   void UnregisterMachine();
   std::vector<std::string> StateLineage(const std::string& state);
 
-  std::string name_;
+  std::string name_ = "";
   Mailbox* mailbox_;
   Address& address_;
   Address& parent_;
-  std::string uid_;
+  std::string uid_ = "";
   bool running_ = true;
   std::map<const std::string, State> states_;
-  std::string current_;
+  std::string current_ = "";
   struct ScheduledMessage {
-    const Address& address_;
-    const std::string message_;
-    const std::chrono::system_clock::time_point time_;
+    const Address& address;
+    const std::string message;
+    const std::chrono::system_clock::time_point time;
   };
   std::vector<ScheduledMessage> queue_;
   std::map<const std::string,

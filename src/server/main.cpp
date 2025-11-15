@@ -7,22 +7,27 @@
 #include <vector>
 
 void Usage(std::string name) {
-  Info() << name << '\n';
-  Info() << "\tserve [options] <directory>\n";
-  Info() << "\thelp\n";
+  Info() << name << std::endl;
+  Info() << "\tserve [options] <directory>" << std::endl;
+  Info() << "\thelp" << std::endl;
 }
 
 void Usage() { Usage("WinkServer"); }
 
 void Help(std::string name, std::string command) {
   if (command == "serve") {
-    Info() << "Starts the Wink Server to serve the given directory.\n\n";
-    Info() << "Options;";
-    Info() << "\n\t-a\n\t\tThe address to bind to (default " << kLocalhost
-           << ':' << kServerPort << ")\n";
-    Info() << "\n\t-l\n\t\tThe directory to log to (default disabled)\n";
-    Info() << "Parameters;";
-    Info() << "\n\tdirectory\n\t\tThe directory containing machine files\n";
+    Info() << "Starts the Wink Server to serve the given directory."
+           << std::endl;
+    Info() << std::endl;
+    Info() << "Options;" << std::endl;
+    Info() << "\t-a" << std::endl;
+    Info() << "\t\tThe address to bind to (default " << kLocalhost << ':'
+           << kServerPort << ')' << std::endl;
+    Info() << "\t-l" << std::endl;
+    Info() << "\t\tThe directory to log to (default disabled)" << std::endl;
+    Info() << "Parameters;" << std::endl;
+    Info() << "\tdirectory" << std::endl;
+    Info() << "\t\tThe directory containing machine binaries" << std::endl;
   } else {
     Usage();
   }
@@ -58,7 +63,7 @@ int main(int argc, char** argv) {
     std::string log;
 
     if (parameters.size() == 0) {
-      Error() << "Missing <directory> parameter\n" << std::flush;
+      Error() << "Missing <directory> parameter" << std::endl;
       return -1;
     }
 
@@ -70,8 +75,7 @@ int main(int argc, char** argv) {
       } else if (k == "-l") {
         log = v;
       } else {
-        Error() << "Option " << k << ":" << v << " not supported\n"
-                << std::flush;
+        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
       }
     }
 

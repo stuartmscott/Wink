@@ -17,7 +17,7 @@ void Machine::Start(const std::string& initial) {
   oss << address_;
   uid_ = oss.str();
 
-  Info() << uid_ << " started\n" << std::flush;
+  Info() << uid_ << " started" << std::endl;
 
   // Notify parent of start
   Send(parent_, "started " + name_);
@@ -47,7 +47,7 @@ void Machine::Start(const std::string& initial) {
 }
 
 void Machine::Exit() {
-  Info() << uid_ << " exited\n" << std::flush;
+  Info() << uid_ << " exited" << std::endl;
 
   // Exit current state
   std::string s = current_;
@@ -78,7 +78,7 @@ void Machine::Exit() {
 }
 
 void Machine::Error(const std::string& message) {
-  Info() << uid_ << " errored: " << message << '\n' << std::flush;
+  Info() << uid_ << " errored: " << message << std::endl;
 
   std::ostringstream oss;
   oss << "errored ";
@@ -102,8 +102,8 @@ void Machine::AddState(State state) {
 }
 
 void Machine::Transition(const std::string& state) {
-  Info() << uid_ << " transitioned: " << current_ << " to " << state << '\n'
-         << std::flush;
+  Info() << uid_ << " transitioned: " << current_ << " to " << state
+         << std::endl;
   auto current_lineage = StateLineage(current_);
   auto next_lineage = StateLineage(state);
 
@@ -135,7 +135,7 @@ void Machine::Transition(const std::string& state) {
 }
 
 void Machine::Send(const Address& to, const std::string& message) {
-  Info() << uid_ << " > " << to << ' ' << message << '\n' << std::flush;
+  Info() << uid_ << " > " << to << ' ' << message << std::endl;
   mailbox_->Send(to, message);
 }
 
@@ -227,8 +227,8 @@ void Machine::SendScheduled(const std::chrono::system_clock::time_point now) {
   std::vector<ScheduledMessage> q;
   q.swap(queue_);
   for (const auto& e : q) {
-    if (e.time_ < now) {
-      Send(e.address_, e.message_);
+    if (e.time < now) {
+      Send(e.address, e.message);
     } else {
       queue_.push_back(e);
     }
@@ -245,7 +245,7 @@ void Machine::ReceiveMessage(const std::chrono::system_clock::time_point now) {
 
 void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
                             const Address& from, const std::string& message) {
-  Info() << uid_ << " < " << from << ' ' << message << '\n' << std::flush;
+  Info() << uid_ << " < " << from << ' ' << message << std::endl;
 
   std::istringstream iss(message);
   std::string t;
@@ -287,12 +287,12 @@ void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
         s = it->second.parent_;
       }
     } else {
-      ::Error() << uid_ << ": No such state: " << s << '\n' << std::flush;
+      ::Error() << uid_ << ": No such state: " << s << std::endl;
       Error("Unrecognized state: " + s);
     }
   }
   // Message not handled by hierarchy
-  ::Error() << uid_ << ": Failed to handle message\n" << std::flush;
+  ::Error() << uid_ << ": Failed to handle message" << std::endl;
   Error("Unhandled message: " + t);
 }
 

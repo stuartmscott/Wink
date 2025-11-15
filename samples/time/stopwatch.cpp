@@ -8,15 +8,15 @@
 #include <string>
 
 int main(int argc, char** argv) {
-  if (argc < 3) {
-    Error() << "Incorrect parameters, expected <address> <parent>\n"
+  if (argc < 4) {
+    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
             << std::flush;
     return -1;
   }
 
-  std::string name(argv[0]);
-  Address address(argv[1]);
-  Address parent(argv[2]);
+  std::string name(argv[1]);
+  Address address(argv[2]);
+  Address parent(argv[3]);
   Machine m(name, address, parent);
 
   std::chrono::time_point<std::chrono::system_clock> start;

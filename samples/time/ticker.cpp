@@ -9,18 +9,19 @@
 #include <thread>
 
 int main(int argc, char** argv) {
-  if (argc < 4) {
-    Error() << "Incorrect parameters, expected <address> <parent> <interval>\n"
+  if (argc < 5) {
+    Error() << "Incorrect parameters, expected <name> <address> <parent> "
+               "<interval>\n"
             << std::flush;
     return -1;
   }
 
-  std::string name(argv[0]);
-  Address address(argv[1]);
-  Address parent(argv[2]);
+  std::string name(argv[1]);
+  Address address(argv[2]);
+  Address parent(argv[3]);
   Machine m(name, address, parent);
 
-  const std::chrono::seconds interval(std::stoi(argv[3]));
+  const std::chrono::seconds interval(std::stoi(argv[4]));
 
   std::atomic_bool running = true;
 

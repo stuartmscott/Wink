@@ -2,6 +2,8 @@
 #include <Wink/log.h>
 #include <Wink/socket.h>
 
+#include <cerrno>
+#include <cstring>
 #include <string>
 
 UDPSocket::UDPSocket(Address& address)
@@ -25,7 +27,8 @@ UDPSocket::UDPSocket(Address& address)
   socklen_t size = sizeof(struct sockaddr_in);
   if (const auto result = bind(socket_, (struct sockaddr*)&sa, size);
       result < 0) {
-    throw std::runtime_error(std::string("Failed to bind UDP socket: ") +
+    throw std::runtime_error(std::string("Failed to bind UDP socket to ") +
+                             address.ToString() + std::string(": ") +
                              std::strerror(errno));
   }
 
@@ -49,24 +52,25 @@ UDPSocket::UDPSocket(Address& address)
   }
 }
 
-ssize_t UDPSocket::Receive(Address& from, char* buffer) {
+bool UDPSocket::Receive(Address& from, char* buffer, size_t& length) {
   struct sockaddr_in address;
   socklen_t size = sizeof(struct sockaddr_in);
   const ssize_t result = recvfrom(socket_, buffer, kMaxUDPPayload, 0,
                                   (struct sockaddr*)&address, &size);
   if (result < 0) {
     if (errno != EAGAIN) {
-      Error() << "Failed to receive packet: " << std::strerror(errno) << '\n'
-              << std::flush;
+      Error() << "Failed to receive packet: " << std::strerror(errno)
+              << std::endl;
     }
-  } else {
-    from.ReadFrom(address);
+    return false;
   }
-  return result;
+  from.ReadFrom(address);
+  length = result;
+  return true;
 }
 
 bool UDPSocket::Send(const Address& to, const char* buffer,
-                     const ssize_t length) {
+                     const size_t length) {
   std::scoped_lock send_lock(send_mutex_);
   struct sockaddr_in address;
   to.WriteTo(address);
