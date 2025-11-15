@@ -19,8 +19,8 @@ constexpr char kTestPacket[] = {'\0', '\0', '\0', '\0', 't', 'e', 's',
                                 't',  ' ',  '1',  '2',  '3', '4'};
 constexpr char kTestAck[] = {'\0', '\0', '\0', '\0', 'a', 'c', 'k'};
 
-constexpr ssize_t kTestPacketLength(sizeof(kTestPacket) /
-                                    sizeof(kTestPacket[0]));
-constexpr ssize_t kTestAckLength(sizeof(kTestAck) / sizeof(kTestAck[0]));
+constexpr size_t kTestPacketLength(sizeof(kTestPacket) /
+                                   sizeof(kTestPacket[0]));
+constexpr size_t kTestAckLength(sizeof(kTestAck) / sizeof(kTestAck[0]));
 
 #endif  // TEST_INCLUDE_WINKTEST_CONSTANTS_H_

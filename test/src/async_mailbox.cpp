@@ -86,7 +86,7 @@ TEST(AsyncMailboxTest, Acknowledgement) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     sender_socket->Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
     ASSERT_EQ(kTestPacketLength, length);
@@ -109,7 +109,7 @@ TEST(AsyncMailboxTest, Acknowledgement) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     receiver_socket->Await(to, buffer, length);
     ASSERT_EQ(sender_address.ip(), to.ip());
     // Sender's port is not bound, so dont assert value
@@ -141,7 +141,7 @@ TEST(AsyncMailboxTest, Retry_DroppedMessage) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     sender_socket->Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
     ASSERT_EQ(kTestPacketLength, length);
@@ -154,7 +154,7 @@ TEST(AsyncMailboxTest, Retry_DroppedMessage) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     sender_socket->Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
     ASSERT_EQ(kTestPacketLength, length);
@@ -177,7 +177,7 @@ TEST(AsyncMailboxTest, Retry_DroppedMessage) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     receiver_socket->Await(to, buffer, length);
     ASSERT_EQ(sender_address.ip(), to.ip());
     // Sender's port is not bound, so dont assert value
@@ -209,7 +209,7 @@ TEST(AsyncMailboxTest, Retry_DroppedAck) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     sender_socket->Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
     ASSERT_EQ(kTestPacketLength, length);
@@ -232,7 +232,7 @@ TEST(AsyncMailboxTest, Retry_DroppedAck) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     receiver_socket->Await(to, buffer, length);
     ASSERT_EQ(sender_address.ip(), to.ip());
     // Sender's port is not bound, so dont assert value
@@ -246,7 +246,7 @@ TEST(AsyncMailboxTest, Retry_DroppedAck) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     sender_socket->Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
     ASSERT_EQ(kTestPacketLength, length);
@@ -266,7 +266,7 @@ TEST(AsyncMailboxTest, Retry_DroppedAck) {
   {
     Address to;
     char buffer[kMaxTestPayload];
-    ssize_t length;
+    size_t length;
     receiver_socket->Await(to, buffer, length);
     ASSERT_EQ(sender_address.ip(), to.ip());
     // Sender's port is not bound, so dont assert value

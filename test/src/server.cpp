@@ -7,13 +7,12 @@
 
 #include <string>
 
-// Paths assume tests were executed from inside build/test/src
 TEST(ServerTest, Registration) {
   Address server_address(kLocalhost, kServerPort);
   AsyncMailbox server_mailbox(new UDPSocket(server_address));
   Server server(server_address, server_mailbox);
 
-  std::thread worker{[&server] { server.Serve("../../samples/"); }};
+  std::thread worker{[&server] { server.Serve("./samples/"); }};
 
   Address client_address(kLocalhost, 0);
   AsyncMailbox client_mailbox(new UDPSocket(client_address));
@@ -62,7 +61,7 @@ TEST(ServerTest, StartListStop) {
   AsyncMailbox server_mailbox(new UDPSocket(server_address));
   Server server(server_address, server_mailbox);
 
-  std::thread worker{[&server] { server.Serve("../../samples/"); }};
+  std::thread worker{[&server] { server.Serve("./samples/"); }};
 
   Address client_address(kLocalhost, 0);
   AsyncMailbox client_mailbox(new UDPSocket(client_address));

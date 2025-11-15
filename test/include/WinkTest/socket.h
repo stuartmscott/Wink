@@ -7,23 +7,24 @@
 #include <Wink/socket.h>
 #include <gtest/gtest.h>
 
+#include <cstring>
 #include <deque>
 
 class MockSocket : public Socket {
  public:
-  ssize_t Receive(Address&, char*) override;
-  bool Send(const Address&, const char*, const ssize_t) override;
-  void Push(const Address&, const char*, const ssize_t);
-  bool Pop(Address&, char*, ssize_t&);
-  void Await(Address&, char*, ssize_t&);
+  bool Receive(Address&, char*, size_t&) override;
+  bool Send(const Address&, const char*, const size_t) override;
+  void Push(const Address&, const char*, const size_t);
+  bool Pop(Address&, char*, size_t&);
+  void Await(Address&, char*, size_t&);
 
  private:
   std::mutex mutex_;
   struct Packet {
     Address address_;
     char buffer_[kMaxTestPayload];
-    ssize_t length_;
-    Packet(const Address address, const char* buffer, const ssize_t length)
+    size_t length_;
+    Packet(const Address address, const char* buffer, const size_t length)
         : address_(address), length_(length) {
       std::memcpy(buffer_, buffer, length);
     }

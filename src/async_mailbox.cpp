@@ -4,6 +4,8 @@
 #include <Wink/socket.h>
 
 #include <algorithm>
+#include <cerrno>
+#include <cstring>
 #include <string>
 
 AsyncMailbox::AsyncMailbox(Socket* socket)
@@ -67,11 +69,11 @@ bool AsyncMailbox::Flushed() {
 
 void AsyncMailbox::BackgroundReceive() {
   Address from;
-  ssize_t length = socket_->Receive(from, receive_buffer_);
-  if (length <= 0) {
+  size_t length;
+  if (socket_->Receive(from, receive_buffer_, length) <= 0) {
     return;
   }
-  if (length > 0 && receive_buffer_[length - 1] == '\n') {
+  while (receive_buffer_[length - 1] == '\n') {
     --length;
   }
   if (length < sizeof(uint)) {

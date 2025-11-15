@@ -308,7 +308,7 @@ cmake --build build
 ## Test
 
 ```
-(cd build/test/src && ctest)
+(cd build && ctest)
 ```
 
 ## Docker
