@@ -8,8 +8,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -24,20 +24,16 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "Parent: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Parent: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Parent: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Parent: OnExit" << std::endl; },
       // Receivers
       {
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
           {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
-             Info() << "Parent: " << os.str() << '\n' << std::flush;
+             Info() << "Parent: " << os.str() << std::endl;
            }},
       }));
 
@@ -47,20 +43,16 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent",
       // On Entry Action
-      []() { Info() << "Leaf1: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf1: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf1: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf1: OnExit" << std::endl; },
       // Receivers
       {
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
           {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
-             Info() << "Leaf1: " << os.str() << '\n' << std::flush;
+             Info() << "Leaf1: " << os.str() << std::endl;
            }},
       }));
 
@@ -70,20 +62,16 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent",
       // On Entry Action
-      []() { Info() << "Child1: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Child1: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Child1: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Child1: OnExit" << std::endl; },
       // Receivers
       {
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
           {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
-             Info() << "Child1: " << os.str() << '\n' << std::flush;
+             Info() << "Child1: " << os.str() << std::endl;
            }},
       }));
 
@@ -93,20 +81,16 @@ int main(int argc, char** argv) {
       // Parent State
       "Child1",
       // On Entry Action
-      []() { Info() << "Leaf2: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf2: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf2: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf2: OnExit" << std::endl; },
       // Receivers
       {
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
           {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
-             Info() << "Leaf2: " << os.str() << '\n' << std::flush;
+             Info() << "Leaf2: " << os.str() << std::endl;
            }},
       }));
 
@@ -116,20 +100,16 @@ int main(int argc, char** argv) {
       // Parent State
       "Child1",
       // On Entry Action
-      []() { Info() << "Leaf3: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf3: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf3: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf3: OnExit" << std::endl; },
       // Receivers
       {
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
           {"",
            [&](const Address& sender, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
-             Info() << "Leaf3: " << os.str() << '\n' << std::flush;
+             Info() << "Leaf3: " << os.str() << std::endl;
            }},
       }));
 

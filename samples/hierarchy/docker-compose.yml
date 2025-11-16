@@ -27,12 +27,16 @@ services:
       - |
         sleep 1
         ./build/src/Wink start -a 10.0.0.4:42001 hierarchy/Empty 10.0.0.2:64000
-        ./build/src/Wink start -a 10.0.0.4:42001 hierarchy/Leaf 10.0.0.2:64001
-        ./build/src/Wink start -a 10.0.0.4:42001 hierarchy/Simple 10.0.0.2:64002
-        ./build/src/Wink start -a 10.0.0.4:42001 hierarchy/Bigger 10.0.0.2:64003
-        ./build/src/Wink start -a 10.0.0.4:42001 hierarchy/Forrest 10.0.0.2:64004
+        ./build/src/Wink start -a 10.0.0.4:42002 hierarchy/Leaf 10.0.0.2:64001
+        ./build/src/Wink start -a 10.0.0.4:42003 hierarchy/Simple 10.0.0.2:64002
+        ./build/src/Wink start -a 10.0.0.4:42004 hierarchy/Bigger 10.0.0.2:64003
+        ./build/src/Wink start -a 10.0.0.4:42005 hierarchy/Forrest 10.0.0.2:64004
     expose:
       - "42001:42001/udp"
+      - "42002:42002/udp"
+      - "42003:42003/udp"
+      - "42004:42004/udp"
+      - "42005:42005/udp"
     networks:
       winknet:
         ipv4_address: 10.0.0.4
@@ -45,13 +49,17 @@ services:
       - -c
       - |
         sleep 2
-        ./build/src/Wink send 10.0.0.2:64000 "Test"
-        ./build/src/Wink send 10.0.0.2:64001 "Test"
-        ./build/src/Wink send 10.0.0.2:64002 "Test"
-        ./build/src/Wink send 10.0.0.2:64003 "Test"
-        ./build/src/Wink send 10.0.0.2:64004 "Test"
+        ./build/src/Wink send -a 10.0.0.6:42001 10.0.0.2:64000 "exit"
+        ./build/src/Wink send -a 10.0.0.6:42002 10.0.0.2:64001 "exit"
+        ./build/src/Wink send -a 10.0.0.6:42003 10.0.0.2:64002 "goto Leaf1" "goto Leaf2" "exit"
+        ./build/src/Wink send -a 10.0.0.6:42004 10.0.0.2:64003 "exit"
+        ./build/src/Wink send -a 10.0.0.6:42005 10.0.0.2:64004 "goto Leaf1" "goto Leaf2" "goto Leaf3" "goto Leaf4" "goto Leaf5" "goto Leaf6" "goto Leaf7" "exit"
     expose:
+      - "42001:42001/udp"
       - "42002:42002/udp"
+      - "42003:42003/udp"
+      - "42004:42004/udp"
+      - "42005:42005/udp"
     networks:
       winknet:
         ipv4_address: 10.0.0.6

@@ -9,8 +9,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -25,11 +25,9 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "Parent: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Parent: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Parent: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Parent: OnExit" << std::endl; },
       // Receivers
       {
           {"goto",
@@ -38,8 +36,6 @@ int main(int argc, char** argv) {
              args >> s;
              m.Transition(s);
            }},
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));
 
   m.AddState(State(
@@ -48,11 +44,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent",
       // On Entry Action
-      []() { Info() << "Leaf1: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf1: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf1: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf1: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -62,11 +56,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent",
       // On Entry Action
-      []() { Info() << "Leaf2: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf2: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf2: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf2: OnExit" << std::endl; },
       // Receivers
       {}));
 

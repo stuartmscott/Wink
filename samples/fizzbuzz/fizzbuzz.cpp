@@ -9,8 +9,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -25,11 +25,9 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "main: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "main: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "main: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "main: OnExit" << std::endl; },
       // Receivers
       {
           {"",
@@ -43,7 +41,7 @@ int main(int argc, char** argv) {
              } else if (n % 3 == 0) {
                m.Transition("Fizz");
              } else {
-               Info() << n << '\n' << std::flush;
+               Info() << n << std::endl;
              }
            }},
       }));
@@ -54,8 +52,7 @@ int main(int argc, char** argv) {
       // Parent State
       "main",
       // On Entry Action
-      []() { Info() << "Fizz\n"
-                    << std::flush; },
+      []() { Info() << "Fizz" << std::endl; },
       // On Exit Action
       []() {},
       // Receivers
@@ -67,8 +64,7 @@ int main(int argc, char** argv) {
       // Parent State
       "main",
       // On Entry Action
-      []() { Info() << "Buzz\n"
-                    << std::flush; },
+      []() { Info() << "Buzz" << std::endl; },
       // On Exit Action
       []() {},
       // Receivers
@@ -80,8 +76,7 @@ int main(int argc, char** argv) {
       // Parent State
       "main",
       // On Entry Action
-      []() { Info() << "FizzBuzz\n"
-                    << std::flush; },
+      []() { Info() << "FizzBuzz" << std::endl; },
       // On Exit Action
       []() {},
       // Receivers

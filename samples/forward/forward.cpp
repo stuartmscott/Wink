@@ -10,8 +10,8 @@
 int main(int argc, char** argv) {
   if (argc < 5) {
     Error() << "Incorrect parameters, expected <name> <address> <parent> "
-               "<destination>\n"
-            << std::flush;
+               "<destination>"
+            << std::endl;
     return -1;
   }
 
@@ -28,11 +28,9 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "main: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "main: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "main: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "main: OnExit" << std::endl; },
       // Receivers
       {
           {"",

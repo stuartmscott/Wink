@@ -9,6 +9,7 @@
 #include <Wink/state.h>
 #include <unistd.h>
 
+#include <csignal>
 #include <fstream>
 #include <functional>
 #include <iostream>
@@ -19,13 +20,18 @@
 #include <utility>
 #include <vector>
 
+static std::atomic_bool got_sigterm = false;
+void SignalHandler(int signal);
+
 class Machine {
  public:
   Machine(std::string name, Address& address, Address& parent)
       : Machine(name, new AsyncMailbox(new UDPSocket(address)), address,
                 parent) {}
   Machine(std::string name, Mailbox* mailbox, Address& address, Address& parent)
-      : name_(name), mailbox_(mailbox), address_(address), parent_(parent) {}
+      : name_(name), mailbox_(mailbox), address_(address), parent_(parent) {
+    std::signal(SIGTERM, SignalHandler);
+  }
   Machine(const Machine& m) = delete;
   Machine(Machine&& m) = delete;
   Machine& operator=(const Machine& m) = delete;
@@ -114,9 +120,10 @@ class Machine {
   Address& address_;
   Address& parent_;
   std::string uid_ = "";
-  bool running_ = true;
+  std::atomic_bool running_ = true;
   std::map<const std::string, State> states_;
   std::string current_ = "";
+  std::string error_message_ = "";
   struct ScheduledMessage {
     const Address& address;
     const std::string message;

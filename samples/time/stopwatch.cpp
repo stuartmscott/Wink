@@ -9,8 +9,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -27,8 +27,7 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "StopWatch is IDLE\n"
-                    << std::flush; },
+      []() { Info() << "StopWatch is IDLE" << std::endl; },
       // On Exit Action
       []() {},
       // Receivers
@@ -42,8 +41,6 @@ int main(int argc, char** argv) {
            }},
           {"stop", [&](const Address& sender,
                        std::istream& args) { m.Transition("idle"); }},
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));
 
   m.AddState(State(
@@ -52,8 +49,7 @@ int main(int argc, char** argv) {
       // Parent State
       "idle",
       // On Entry Action
-      []() { Info() << "StopWatch is TIMING\n"
-                    << std::flush; },
+      []() { Info() << "StopWatch is TIMING" << std::endl; },
       // On Exit Action
       []() {},
       // Receivers

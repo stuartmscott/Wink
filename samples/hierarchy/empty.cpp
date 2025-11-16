@@ -8,8 +8,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 

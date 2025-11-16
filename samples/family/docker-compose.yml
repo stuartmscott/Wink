@@ -17,14 +17,29 @@ services:
         ipv4_address: 10.0.0.2
     working_dir: /Wink
 
-  client:
+  starter:
     image: wink:latest
     command:
       - /bin/sh
       - -c
       - |
         sleep 1
-        ./build/src/Wink start -a 10.0.0.4:42001 -f true family/Parent 10.0.0.2:64001
+        ./build/src/Wink start -a 10.0.0.3:42001 -f true family/Parent 10.0.0.2:64001
+    expose:
+      - "42001:42001/udp"
+    networks:
+      winknet:
+        ipv4_address: 10.0.0.3
+    working_dir: /Wink
+
+  ender:
+    image: wink:latest
+    command:
+      - /bin/sh
+      - -c
+      - |
+        sleep 10
+        ./build/src/Wink stop -a 10.0.0.4:42001 10.0.0.2:64001
     expose:
       - "42001:42001/udp"
     networks:

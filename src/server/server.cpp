@@ -20,7 +20,6 @@ int Server::Serve(const std::string& directory) {
   Address sender;
   std::string message;
   while (running_) {
-    Info() << "Loop: " << running_ << std::endl;
     if (!mailbox_.Receive(sender, message)) {
       continue;
     }
@@ -41,71 +40,87 @@ int Server::Serve(const std::string& directory) {
       }
       destination.set_ip(address_.ip());
 
-      if (const auto port = destination.port(); port > 0) {
-        // Stop existing machine on requested port (if any).
-        Stop(port);
-      }
+      // TODO handle in worker threat
+      {
+        if (const auto port = destination.port(); port > 0) {
+          // Stop existing machine on requested port (if any).
+          Stop(port);
+        }
 
-      // Resolve file path.
-      // ie. <directory>/<name>
-      std::filesystem::path filepath(directory);
-      filepath /= ParseMachineName(name).first;
-      filepath = std::filesystem::absolute(filepath);
+        // Resolve file path.
+        // ie. <directory>/<name>
+        std::filesystem::path filepath(directory);
+        filepath /= ParseMachineName(name).first;
+        filepath = std::filesystem::absolute(filepath);
 
-      Info() << "Current Path: " << std::filesystem::current_path()
-             << std::endl;
-      Info() << "Binary Path: " << filepath << std::endl;
+        Info() << "Current Path: " << std::filesystem::current_path()
+               << std::endl;
+        Info() << "Binary Path: " << filepath << std::endl;
 
-      // Create parameter list
-      std::vector<std::string> parameters;
+        // Create parameter list
+        std::vector<std::string> parameters;
 
-      // First parameter is name of the machine, optionally including tag.
-      // This will also become the log file name (if enabled).
-      // ie. <name>, <name>#<tag>
-      parameters.push_back(name);
+        // First parameter is name of the machine, optionally including tag.
+        // This will also become the log file name (if enabled).
+        // ie. <name>, <name>#<tag>
+        parameters.push_back(name);
 
-      // Second parameter is the address of the machine.
-      parameters.push_back(destination.ToString());
+        // Second parameter is the address of the machine.
+        parameters.push_back(destination.ToString());
 
-      // Third parameter is the address of the spawner.
-      parameters.push_back(sender.ToString());
+        // Third parameter is the address of the spawner.
+        parameters.push_back(sender.ToString());
 
-      // Remaining parameters are given by spawner.
-      while (iss.good()) {
-        std::string p;
-        iss >> p;
-        parameters.push_back(p);
-      }
+        // Remaining parameters are given by spawner.
+        while (iss.good()) {
+          std::string p;
+          iss >> p;
+          parameters.push_back(p);
+        }
 
-      if (const auto result = Start(filepath.string(), parameters);
-          result < 0) {
-        Error() << "Failed to start process" << std::endl;
-        return result;
+        if (const auto result = Start(filepath.string(), parameters);
+            result < 0) {
+          Error() << "Failed to start process" << std::endl;
+          return result;
+        }
       }
     } else if (command == "stop") {
       uint16_t port;
       iss >> port;
-      if (const auto result = Stop(port); result < 0) {
-        Error() << "Failed to stop process" << std::endl;
-        return result;
+
+      // TODO handle in worker threat
+      {
+        if (const auto result = Stop(port); result < 0) {
+          Error() << "Failed to stop process" << std::endl;
+          return result;
+        }
       }
     } else if (command == "register") {
       std::string machine;
       iss >> machine;
       int pid;
       iss >> pid;
-      machines_.emplace(sender.port(), machine);
-      pids_.emplace(sender.port(), pid);
+      // TODO secure with mutex
+      {
+        machines_.emplace(sender.port(), machine);
+        pids_.emplace(sender.port(), pid);
+      }
     } else if (command == "unregister") {
-      if (const auto it = pids_.find(sender.port()); it != pids_.end()) {
-        // remove port from machines and pids maps
-        machines_.erase(sender.port());
-        pids_.erase(sender.port());
-      } else {
-        Error() << "Unrecognized port " << sender.port() << std::endl;
+      // TODO secure with mutex
+      {
+        if (const auto it = pids_.find(sender.port()); it != pids_.end()) {
+          // remove port from machines and pids maps
+          machines_.erase(sender.port());
+          pids_.erase(sender.port());
+        } else {
+          Error() << "Unrecognized port " << sender.port() << std::endl;
+        }
       }
     } else if (command == "list") {
-      SendMessage(mailbox_, sender, List());
+      // TODO handle in worker threat
+      {
+        SendMessage(mailbox_, sender, List());
+      }
     } else {
       Error() << "Failed to parse " << message << std::endl;
     }
@@ -193,6 +208,7 @@ pid_t Server::Stop(uint16_t port) {
     pid = it->second;
   }
   if (pid > 0) {
+    Info() << "Killing: " << port << " : " << pid << std::endl;
     if (const auto result = kill(pid, SIGTERM); result < 0) {
       return result;
     }

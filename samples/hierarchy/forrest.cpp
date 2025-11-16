@@ -8,8 +8,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -23,9 +23,6 @@ int main(int argc, char** argv) {
     args >> s;
     m.Transition(s);
   };
-  auto exit_receiver = [&](const Address& sender, std::istream& args) {
-    m.Exit();
-  };
 
   m.AddState(State(
       // State Name
@@ -33,15 +30,12 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "Leaf1: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf1: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf1: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf1: OnExit" << std::endl; },
       // Receivers
       {
           {"goto", goto_receiver},
-          {"exit", exit_receiver},
       }));
 
   m.AddState(State(
@@ -50,15 +44,12 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "Parent1: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Parent1: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Parent1: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Parent1: OnExit" << std::endl; },
       // Receivers
       {
           {"goto", goto_receiver},
-          {"exit", exit_receiver},
       }));
 
   m.AddState(State(
@@ -67,11 +58,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent1",
       // On Entry Action
-      []() { Info() << "Leaf2: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf2: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf2: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf2: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -81,11 +70,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent1",
       // On Entry Action
-      []() { Info() << "Child2: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Child2: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Child2: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Child2: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -95,11 +82,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Child2",
       // On Entry Action
-      []() { Info() << "Leaf4: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf4: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf4: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf4: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -109,11 +94,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Child2",
       // On Entry Action
-      []() { Info() << "Leaf5: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf5: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf5: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf5: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -123,15 +106,12 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "Parent2: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Parent2: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Parent2: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Parent2: OnExit" << std::endl; },
       // Receivers
       {
           {"goto", goto_receiver},
-          {"exit", exit_receiver},
       }));
 
   m.AddState(State(
@@ -140,11 +120,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent2",
       // On Entry Action
-      []() { Info() << "Child3: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Child3: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Child3: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Child3: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -154,11 +132,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Child3",
       // On Entry Action
-      []() { Info() << "Leaf6: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf6: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf6: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf6: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -168,11 +144,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent2",
       // On Entry Action
-      []() { Info() << "Child4: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Child4: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Child4: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Child4: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -182,11 +156,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Child4",
       // On Entry Action
-      []() { Info() << "Leaf7: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf7: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf7: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf7: OnExit" << std::endl; },
       // Receivers
       {}));
 
@@ -196,15 +168,12 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "Parent3: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Parent3: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Parent3: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Parent3: OnExit" << std::endl; },
       // Receivers
       {
           {"goto", goto_receiver},
-          {"exit", exit_receiver},
       }));
 
   m.AddState(State(
@@ -213,11 +182,9 @@ int main(int argc, char** argv) {
       // Parent State
       "Parent3",
       // On Entry Action
-      []() { Info() << "Leaf3: OnEntry\n"
-                    << std::flush; },
+      []() { Info() << "Leaf3: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Leaf3: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Leaf3: OnExit" << std::endl; },
       // Receivers
       {}));
 

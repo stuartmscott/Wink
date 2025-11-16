@@ -27,19 +27,21 @@ services:
       - |
         sleep 1
         ./build/src/Wink start -a 10.0.0.4:42001 -f true time/After 10.0.0.2:64000
-        ./build/src/Wink start -a 10.0.0.4:42001 -f true time/At 10.0.0.2:64001
-        ./build/src/Wink start -a 10.0.0.4:42001 time/StopWatch 10.0.0.2:64002
-        ./build/src/Wink send 10.0.0.2:64002 idle
-        ./build/src/Wink send 10.0.0.2:64002 start
-        ./build/src/Wink send 10.0.0.2:64002 stop
-        ./build/src/Wink send 10.0.0.2:64002 start
+        ./build/src/Wink start -a 10.0.0.4:42002 -f true time/At 10.0.0.2:64001
+        ./build/src/Wink start -a 10.0.0.4:42003 time/StopWatch 10.0.0.2:64002
+        ./build/src/Wink send -a 10.0.0.4:42004 10.0.0.2:64002 idle start stop start
         sleep 1
-        ./build/src/Wink send 10.0.0.2:64002 stop
-        ./build/src/Wink send 10.0.0.2:64002 exit
-        ./build/src/Wink start -a 10.0.0.4:42001 time/Ticker#fast 10.0.0.2:64003 2
-        ./build/src/Wink start -a 10.0.0.4:42001 time/Ticker#slow 10.0.0.2:64004 20
+        ./build/src/Wink send -a 10.0.0.4:42005 10.0.0.2:64002 stop exit
+        ./build/src/Wink start -a 10.0.0.4:42006 time/Ticker#fast 10.0.0.2:64003 2
+        ./build/src/Wink start -a 10.0.0.4:42007 time/Ticker#slow 10.0.0.2:64004 20
     expose:
       - "42001:42001/udp"
+      - "42002:42002/udp"
+      - "42003:42003/udp"
+      - "42004:42004/udp"
+      - "42005:42005/udp"
+      - "42006:42006/udp"
+      - "42007:42007/udp"
     networks:
       winknet:
         ipv4_address: 10.0.0.4

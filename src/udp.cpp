@@ -57,7 +57,7 @@ bool UDPSocket::Receive(Address& from, char* buffer, size_t& length) {
   socklen_t size = sizeof(struct sockaddr_in);
   const ssize_t result = recvfrom(socket_, buffer, kMaxUDPPayload, 0,
                                   (struct sockaddr*)&address, &size);
-  if (result < 0) {
+  if (result <= 0) {
     if (errno != EAGAIN) {
       Error() << "Failed to receive packet: " << std::strerror(errno)
               << std::endl;

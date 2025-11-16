@@ -69,13 +69,15 @@ services:
       - -c
       - |
         sleep 10
-        ./build/src/Wink send 10.0.0.2:64000 "publish Hello"
+        ./build/src/Wink send -a 10.0.0.6:42001 10.0.0.2:64000 "publish Hello"
         sleep 10
-        ./build/src/Wink send 10.0.0.2:64000 "publish World"
+        ./build/src/Wink send -a 10.0.0.6:42002 10.0.0.2:64000 "publish World"
         sleep 10
-        ./build/src/Wink send 10.0.0.2:64000 exit
+        ./build/src/Wink send -a 10.0.0.6:42003 10.0.0.2:64000 exit
     expose:
       - "42001:42001/udp"
+      - "42002:42002/udp"
+      - "42003:42003/udp"
     networks:
       winknet:
         ipv4_address: 10.0.0.6

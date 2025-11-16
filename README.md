@@ -62,8 +62,8 @@ If the optional empty receiver exists, it is triggered if no other receivers mat
 
 int main(int argc, char **argv) {
   if (argc < 4) {
-    error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -78,8 +78,8 @@ int main(int argc, char **argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { info() << "Switch is OFF\n"
-                    << std::flush; },
+      []() { info() << "Switch is OFF"
+                    << std::endl; },
       // On Exit Action
       []() {},
       // Receivers
@@ -96,8 +96,8 @@ int main(int argc, char **argv) {
       // Parent State
       "off",
       // On Entry Action
-      []() { info() << "Switch is ON\n"
-                    << std::flush; },
+      []() { info() << "Switch is ON"
+                    << std::endl; },
       // On Exit Action
       []() {},
       // Receivers
@@ -141,8 +141,8 @@ When a parent is notified that a child has errored, it can chose to do nothing, 
 
 int main(int argc, char **argv) {
   if (argc < 4) {
-    error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -158,27 +158,27 @@ int main(int argc, char **argv) {
       "",
       // On Entry Action
       [&]() {
-        info() << "Parent: OnEntry\n" << std::flush;
+        info() << "Parent: OnEntry" << std::endl;
         m.Spawn("family/Child");
       },
       // On Exit Action
-      []() { info() << "Parent: OnExit\n"
-                    << std::flush; },
+      []() { info() << "Parent: OnExit"
+                    << std::endl; },
       // Receivers
       {
           {"started",
            [&](const Address &sender, std::istream &args) {
              std::string child;
              args >> child;
-             info() << "Parent: " << sender << ' ' << child << " has started\n"
-                    << std::flush;
+             info() << "Parent: " << sender << ' ' << child << " has started"
+                    << std::endl;
            }},
           {"pulsed",
            [&](const Address &sender, std::istream &args) {
              std::string child;
              args >> child;
-             info() << "Parent: " << sender << ' ' << child << " has pulsed\n"
-                    << std::flush;
+             info() << "Parent: " << sender << ' ' << child << " has pulsed"
+                    << std::endl;
            }},
           {"errored",
            [&](const Address &sender, std::istream &args) {
@@ -187,15 +187,15 @@ int main(int argc, char **argv) {
              std::ostringstream os;
              os << args.rdbuf();
              info() << "Parent: " << sender << ' ' << child
-                    << " has errored: " << os.str() << '\n'
-                    << std::flush;
+                    << " has errored: " << os.str()
+                    << std::endl;
            }},
           {"exited",
            [&](const Address &sender, std::istream &args) {
              std::string child;
              args >> child;
-             info() << "Parent: " << sender << ' ' << child << " has exited\n"
-                    << std::flush;
+             info() << "Parent: " << sender << ' ' << child << " has exited"
+                    << std::endl;
              m.Transition("main"); // Retry
            }},
       }));
@@ -216,8 +216,8 @@ int main(int argc, char **argv) {
 
 int main(int argc, char **argv) {
   if (argc < 4) {
-    error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 

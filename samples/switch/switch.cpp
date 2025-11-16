@@ -9,8 +9,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -25,8 +25,7 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "Switch is OFF\n"
-                    << std::flush; },
+      []() { Info() << "Switch is OFF" << std::endl; },
       // On Exit Action
       []() {},
       // Receivers
@@ -43,8 +42,7 @@ int main(int argc, char** argv) {
       // Parent State
       "off",
       // On Entry Action
-      []() { Info() << "Switch is ON\n"
-                    << std::flush; },
+      []() { Info() << "Switch is ON" << std::endl; },
       // On Exit Action
       []() {},
       // Receivers

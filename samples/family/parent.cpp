@@ -9,8 +9,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -26,29 +26,28 @@ int main(int argc, char** argv) {
       "",
       // On Entry Action
       [&]() {
-        Info() << "Parent: OnEntry\n" << std::flush;
+        Info() << "Parent: OnEntry" << std::endl;
         // Spawn two identical children, differentiated by a tag
         m.Spawn("family/Child#Alice");
         m.Spawn("family/Child#Bob");
       },
       // On Exit Action
-      []() { Info() << "Parent: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Parent: OnExit" << std::endl; },
       // Receivers
       {
           {"started",
            [&](const Address& sender, std::istream& args) {
              std::string child;
              args >> child;
-             Info() << "Parent: " << sender << ' ' << child << " has started\n"
-                    << std::flush;
+             Info() << "Parent: " << sender << ' ' << child << " has started"
+                    << std::endl;
            }},
           {"pulsed",
            [&](const Address& sender, std::istream& args) {
              std::string child;
              args >> child;
-             Info() << "Parent: " << sender << ' ' << child << " has pulsed\n"
-                    << std::flush;
+             Info() << "Parent: " << sender << ' ' << child << " has pulsed"
+                    << std::endl;
            }},
           {"errored",
            [&](const Address& sender, std::istream& args) {
@@ -57,15 +56,14 @@ int main(int argc, char** argv) {
              std::ostringstream os;
              os << args.rdbuf();
              Info() << "Parent: " << sender << ' ' << child
-                    << " has errored: " << os.str() << '\n'
-                    << std::flush;
+                    << " has errored: " << os.str() << std::endl;
            }},
           {"exited",
            [&](const Address& sender, std::istream& args) {
              std::string child;
              args >> child;
-             Info() << "Parent: " << sender << ' ' << child << " has exited\n"
-                    << std::flush;
+             Info() << "Parent: " << sender << ' ' << child << " has exited"
+                    << std::endl;
              m.Spawn(child);  // Retry
            }},
       }));

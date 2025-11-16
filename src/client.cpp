@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-int StartMachine(Mailbox& mailbox, Address& address, const std::string& machine,
-                 Address& destination, const std::vector<std::string> args,
-                 const bool follow) {
+int StartMachine(Mailbox& mailbox, const Address address,
+                 const std::string machine, Address& destination,
+                 const std::vector<std::string> args, const bool follow) {
   Info() << "Address: " << address << std::endl;
 
   // Send Request
@@ -51,11 +51,12 @@ int StartMachine(Mailbox& mailbox, Address& address, const std::string& machine,
     return -1;
   }
 
+  Address from;
   while (follow) {
-    if (!mailbox.Receive(destination, message)) {
+    if (!mailbox.Receive(from, message)) {
       continue;
     }
-    Info() << "< " << destination << ' ' << message << std::endl;
+    Info() << "< " << from << ' ' << message << std::endl;
     std::istringstream iss(message);
     std::string command;
     iss >> command;
@@ -66,7 +67,7 @@ int StartMachine(Mailbox& mailbox, Address& address, const std::string& machine,
   return 0;
 }
 
-int StopMachine(Mailbox& mailbox, const Address& address) {
+int StopMachine(Mailbox& mailbox, const Address address) {
   Address server(address.ip(), kServerPort);
   std::ostringstream oss;
   oss << "stop ";
@@ -75,10 +76,17 @@ int StopMachine(Mailbox& mailbox, const Address& address) {
   return 0;
 }
 
-void SendMessage(Mailbox& mailbox, const Address& to,
-                 const std::string& message) {
+void SendMessage(Mailbox& mailbox, const Address to,
+                 const std::string message) {
   Info() << "> " << to << ' ' << message << std::endl;
   mailbox.Send(to, message);
+}
+
+void SendMessages(Mailbox& mailbox, const Address to,
+                  const std::vector<std::string> messages) {
+  for (const auto& m : messages) {
+    SendMessage(mailbox, to, m);
+  }
 }
 
 bool ReceiveMessage(Mailbox& mailbox, Address& from, std::string& message) {
@@ -89,7 +97,7 @@ bool ReceiveMessage(Mailbox& mailbox, Address& from, std::string& message) {
   return success;
 }
 
-int ListMachines(Mailbox& mailbox, const Address& server) {
+int ListMachines(Mailbox& mailbox, const Address server) {
   // Send Request
   SendMessage(mailbox, server, "list");
 

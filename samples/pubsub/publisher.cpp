@@ -10,8 +10,8 @@
 
 int main(int argc, char** argv) {
   if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>\n"
-            << std::flush;
+    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+            << std::endl;
     return -1;
   }
 
@@ -28,32 +28,28 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      [&]() { Info() << "Publisher: OnEntry\n"
-                     << std::flush; },
+      [&]() { Info() << "Publisher: OnEntry" << std::endl; },
       // On Exit Action
-      []() { Info() << "Publisher: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "Publisher: OnExit" << std::endl; },
       // Receivers
       {
           {"subscribe",
            [&](const Address& sender, std::istream& args) {
              if (subscribers.insert(sender).second) {
-               Info() << "Publisher: subscribed: " << sender << '\n'
-                      << std::flush;
+               Info() << "Publisher: subscribed: " << sender << std::endl;
              }
            }},
           {"unsubscribe",
            [&](const Address& sender, std::istream& args) {
              if (subscribers.erase(sender)) {
-               Info() << "Publisher: unsubscribed: " << sender << '\n'
-                      << std::flush;
+               Info() << "Publisher: unsubscribed: " << sender << std::endl;
              }
            }},
           {"publish",
            [&](const Address& sender, std::istream& args) {
              std::string payload;
              args >> payload;
-             Info() << "Publisher: publish " << payload << '\n' << std::flush;
+             Info() << "Publisher: publish " << payload << std::endl;
              std::ostringstream os;
              os << "update ";
              os << payload;
@@ -62,8 +58,6 @@ int main(int argc, char** argv) {
                m.Send(s, message);
              }
            }},
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));
 
   m.Start();

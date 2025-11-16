@@ -25,10 +25,12 @@ services:
       - |
         sleep 1
         ./build/src/Wink start -a 10.0.0.4:42001 -f true useless/Useless 10.0.0.2:64000
-        ./build/src/Wink start -a client:42001 -f true useless/Useless server:64001
-        ./build/src/Wink start -a client:42001 -f true useless/Useless network-server-1:64002
+        ./build/src/Wink start -a client:42002 -f true useless/Useless server:64001
+        ./build/src/Wink start -a client:42003 -f true useless/Useless network-server-1:64002
     expose:
       - "42001:42001/udp"
+      - "42002:42002/udp"
+      - "42003:42003/udp"
     networks:
       winknet:
         ipv4_address: 10.0.0.4

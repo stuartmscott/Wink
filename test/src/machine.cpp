@@ -179,24 +179,39 @@ TEST(MachineTest, Exit) {
   SendResult result = 0;
   mailbox->sendResults_.push_back(result);
   mailbox->sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
 
   Machine m(name, mailbox, address, parent);
   // Override exit
   m.on_exit_ = []() {};
+  std::thread worker{[&m] { m.Start(); }};
   m.Exit();
 
+  worker.join();
+
   // Check mailbox send
-  ASSERT_EQ(2, mailbox->sendArgs_.size());
-  // Send Exited Message to Spawner
+  ASSERT_EQ(4, mailbox->sendArgs_.size());
+  // Send Started Message to Spawner
   const auto arg0 = mailbox->sendArgs_.at(0);
   ASSERT_EQ(parent.ip(), arg0.toIP);
   ASSERT_EQ(parent.port(), arg0.toPort);
-  ASSERT_EQ(std::string("exited test/Test"), arg0.message);
-  // Unregister Machine
+  ASSERT_EQ(std::string("started test/Test"), arg0.message);
+  // Register Machine
   const auto arg1 = mailbox->sendArgs_.at(1);
   ASSERT_EQ(kLocalhost, arg1.toIP);
   ASSERT_EQ(kServerPort, arg1.toPort);
-  ASSERT_EQ(std::string("unregister"), arg1.message);
+  ASSERT_TRUE(arg1.message.starts_with("register test/Test "));
+  // Send Exited Message to Spawner
+  const auto arg2 = mailbox->sendArgs_.at(2);
+  ASSERT_EQ(parent.ip(), arg2.toIP);
+  ASSERT_EQ(parent.port(), arg2.toPort);
+  ASSERT_EQ(std::string("exited test/Test"), arg2.message);
+  // Unregister Machine
+  const auto arg3 = mailbox->sendArgs_.at(3);
+  ASSERT_EQ(kLocalhost, arg3.toIP);
+  ASSERT_EQ(kServerPort, arg3.toPort);
+  ASSERT_EQ(std::string("unregister"), arg3.message);
 }
 
 TEST(MachineTest, Error) {
@@ -210,29 +225,44 @@ TEST(MachineTest, Error) {
   mailbox->sendResults_.push_back(result);
   mailbox->sendResults_.push_back(result);
   mailbox->sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
+  mailbox->sendResults_.push_back(result);
 
   Machine m(name, mailbox, address, parent);
   // Override exit
   m.on_exit_ = []() {};
+  std::thread worker{[&m] { m.Start(); }};
   m.Error("AHHHH");
 
+  worker.join();
+
   // Check mailbox send
-  ASSERT_EQ(3, mailbox->sendArgs_.size());
-  // Send Errored Message to Spawner
+  ASSERT_EQ(5, mailbox->sendArgs_.size());
+  // Send Started Message to Spawner
   const auto arg0 = mailbox->sendArgs_.at(0);
   ASSERT_EQ(parent.ip(), arg0.toIP);
   ASSERT_EQ(parent.port(), arg0.toPort);
-  ASSERT_EQ(std::string("errored test/Test AHHHH"), arg0.message);
-  // Send Exited Message to Spawner
+  ASSERT_EQ(std::string("started test/Test"), arg0.message);
+  // Register Machine
   const auto arg1 = mailbox->sendArgs_.at(1);
-  ASSERT_EQ(parent.ip(), arg1.toIP);
-  ASSERT_EQ(parent.port(), arg1.toPort);
-  ASSERT_EQ(std::string("exited test/Test"), arg1.message);
-  // Unregister Machine
+  ASSERT_EQ(kLocalhost, arg1.toIP);
+  ASSERT_EQ(kServerPort, arg1.toPort);
+  ASSERT_TRUE(arg1.message.starts_with("register test/Test "));
+  // Send Errored Message to Spawner
   const auto arg2 = mailbox->sendArgs_.at(2);
-  ASSERT_EQ(kLocalhost, arg2.toIP);
-  ASSERT_EQ(kServerPort, arg2.toPort);
-  ASSERT_EQ(std::string("unregister"), arg2.message);
+  ASSERT_EQ(parent.ip(), arg2.toIP);
+  ASSERT_EQ(parent.port(), arg2.toPort);
+  ASSERT_EQ(std::string("errored test/Test AHHHH"), arg2.message);
+  // Send Exited Message to Spawner
+  const auto arg3 = mailbox->sendArgs_.at(3);
+  ASSERT_EQ(parent.ip(), arg3.toIP);
+  ASSERT_EQ(parent.port(), arg3.toPort);
+  ASSERT_EQ(std::string("exited test/Test"), arg3.message);
+  // Unregister Machine
+  const auto arg4 = mailbox->sendArgs_.at(4);
+  ASSERT_EQ(kLocalhost, arg4.toIP);
+  ASSERT_EQ(kServerPort, arg4.toPort);
+  ASSERT_EQ(std::string("unregister"), arg4.message);
 }
 
 TEST(MachineTest, AddState) {

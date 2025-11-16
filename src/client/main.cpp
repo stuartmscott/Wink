@@ -50,7 +50,10 @@ void Help(std::string name, std::string command) {
   } else if (command == "stop") {
     Info() << "Stop an existing machine." << std::endl;
     Info() << std::endl;
-    // Info() << "Options;" << std::endl;
+    Info() << "Options;" << std::endl;
+    Info() << "\t-a" << std::endl;
+    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+           << std::endl;
     Info() << "Parameters;" << std::endl;
     Info() << "\tmachine" << std::endl;
     Info() << "\t\tThe address of the machine to stop" << std::endl;
@@ -59,27 +62,37 @@ void Help(std::string name, std::string command) {
     Info() << "\t\tStop an existing machine on ip 123.45.67.89 port 64646"
            << std::endl;
   } else if (command == "send") {
-    Info() << "Sends a message to a machine." << std::endl;
+    Info() << "Sends a message (or messages) to a machine." << std::endl;
     Info() << std::endl;
     Info() << "Options;" << std::endl;
+    Info() << "\t-a" << std::endl;
+    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+           << std::endl;
     Info() << "\t-r" << std::endl;
     Info() << "\t\tThe number of replies to await (default 0)" << std::endl;
     Info() << "Parameters;" << std::endl;
     Info() << "\tmachine" << std::endl;
     Info() << "\t\tThe address of the machine to send to" << std::endl;
     Info() << "\tmessage" << std::endl;
-    Info() << "\t\tThe message to send" << std::endl;
+    Info() << "\t\tThe message (or messages) to send" << std::endl;
     Info() << "Examples;" << std::endl;
-    Info() << "\tsend :64646 add(2,8)" << std::endl;
+    Info() << "\tsend :64646 \"add(2,8)\"" << std::endl;
     Info() << "\t\tSend a message to machine on localhost port 64646"
            << std::endl;
-    Info() << "\tsend 123.45.67.89:64646 add(2,8)" << std::endl;
+    Info() << "\tsend 123.45.67.89:64646 \"add(2,8)\"" << std::endl;
     Info() << "\t\tSend a message to machine on ip 123.45.67.89 port 64646"
+           << std::endl;
+    Info() << "\tsend 123.45.67.89:64646 \"add(2,8)\" \"sub(5,3)\""
+           << std::endl;
+    Info() << "\t\tSend two messages to machine on ip 123.45.67.89 port 64646"
            << std::endl;
   } else if (command == "list") {
     Info() << "List machines running on a host." << std::endl;
     Info() << std::endl;
-    // Info() << "Options;" << std::endl;
+    Info() << "Options;" << std::endl;
+    Info() << "\t-a" << std::endl;
+    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+           << std::endl;
     Info() << "Parameters;" << std::endl;
     Info() << "\thost" << std::endl;
     Info() << "\t\tThe host to list the machines from" << std::endl;
@@ -161,9 +174,16 @@ int main(int argc, char** argv) {
     AsyncMailbox mailbox(new UDPSocket(address));
     return StartMachine(mailbox, address, binary, destination, args, follow);
   } else if (command == "stop") {
+    Address address(kLocalhost, 0);
+
     // Parse Options
     for (const auto& [k, v] : options) {
-      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+      if (k == "-a") {
+        std::stringstream ss(v);
+        ss >> address;
+      } else {
+        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+      }
     }
 
     Address destination(kLocalhost, 0);
@@ -180,14 +200,17 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    Address address;
     AsyncMailbox mailbox(new UDPSocket(address));
     return StopMachine(mailbox, destination);
   } else if (command == "send") {
+    Address address(kLocalhost, 0);
     uint32_t replies = 0;
     // Parse Options
     for (const auto& [k, v] : options) {
-      if (k == "-r") {
+      if (k == "-a") {
+        std::stringstream ss(v);
+        ss >> address;
+      } else if (k == "-r") {
         std::stringstream ss(v);
         ss >> replies;
       } else {
@@ -195,8 +218,8 @@ int main(int argc, char** argv) {
       }
     }
 
-    Address receiver(kLocalhost, 0);
-    std::string message;
+    Address destination(kLocalhost, 0);
+    std::vector<std::string> messages;
     switch (parameters.size()) {
       case 0:
         Error() << "Missing <machine> parameter" << std::endl;
@@ -204,20 +227,16 @@ int main(int argc, char** argv) {
       case 1:
         Error() << "Missing <message> parameter" << std::endl;
         return -1;
-      case 2: {
+      default: {
         const auto s = parameters.at(0);
         std::istringstream ss(s);
-        ss >> receiver;
-        message = parameters.at(1);
+        ss >> destination;
+        messages.assign(parameters.begin() + 1, parameters.end());
       } break;
-      default:
-        Error() << "Too many parameters" << std::endl;
-        return -1;
     }
 
-    Address sender(kLocalhost, 0);
-    AsyncMailbox mailbox(new UDPSocket(sender));
-    SendMessage(mailbox, receiver, message);
+    AsyncMailbox mailbox(new UDPSocket(address));
+    SendMessages(mailbox, destination, messages);
 
     Address from;
     std::string reply;
@@ -229,28 +248,34 @@ int main(int argc, char** argv) {
     }
     return 0;
   } else if (command == "list") {
+    Address address(kLocalhost, 0);
+
     // Parse Options
     for (const auto& [k, v] : options) {
-      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+      if (k == "-a") {
+        std::stringstream ss(v);
+        ss >> address;
+      } else {
+        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+      }
     }
 
-    Address receiver(kLocalhost, kServerPort);
+    Address destination(kLocalhost, kServerPort);
     switch (parameters.size()) {
       case 0:
         break;
       case 1: {
         const auto s = parameters.at(0);
         std::istringstream ss(s);
-        ss >> receiver;
+        ss >> destination;
       } break;
       default:
         Error() << "Too many parameters" << std::endl;
         return -1;
     }
 
-    Address sender(kLocalhost, 0);
-    AsyncMailbox mailbox(new UDPSocket(sender));
-    return ListMachines(mailbox, receiver);
+    AsyncMailbox mailbox(new UDPSocket(address));
+    return ListMachines(mailbox, destination);
   } else if (command == "help") {
     if (argc < 3) {
       Usage();

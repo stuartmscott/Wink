@@ -101,6 +101,8 @@ void AsyncMailbox::BackgroundReceive() {
         it++;
       }
     }
+    Error() << "Failed to find acknowledged message: " << from << ": "
+            << seq_num << std::endl;
   } else {
     // Send acknowledgement
     {
@@ -117,7 +119,8 @@ void AsyncMailbox::BackgroundReceive() {
     if (const auto& it = incoming_seq_nums_.find(from);
         it != incoming_seq_nums_.end()) {
       if (seq_num <= it->second) {
-        Info() << "Dropping duplicate message: " << seq_num << std ::endl;
+        Info() << "Dropping duplicate message: " << from << ": " << seq_num
+               << std ::endl;
         // Drop duplicate packet
         // TODO handle sequence number overflow and wrap around
         return;
@@ -146,7 +149,7 @@ void AsyncMailbox::BackgroundSend() {
   for (auto it = outgoing_messages_.begin(); it != outgoing_messages_.end();) {
     if (it->attempts >= kMaxRetries) {
       Error() << "Failed to deliver to " << it->address << " failed after "
-              << it->attempts << " attempts" << std::endl;
+              << std::to_string(it->attempts) << " attempts" << std::endl;
       it = outgoing_messages_.erase(it);
       continue;
     }
@@ -159,10 +162,10 @@ void AsyncMailbox::BackgroundSend() {
       const auto length =
           std::min(it->message.length(), kMaxUDPPayload - sizeof(uint64_t));
       std::memcpy(send_buffer_ + sizeof(uint64_t), it->message.c_str(), length);
-      uint64_t bytes = length + sizeof(uint64_t);
+      size_t bytes = length + sizeof(uint64_t);
       if (!socket_->Send(it->address, send_buffer_, bytes)) {
-        Error() << "Failed to send to " << it->address << ": "
-                << std::strerror(errno) << std::endl;
+        Error() << "Failed to send " << bytes << " bytes to " << it->address
+                << ": " << std::strerror(errno) << std::endl;
       }
 
       it->attempts++;

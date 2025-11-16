@@ -12,27 +12,35 @@
 #include <sstream>
 #include <string>
 
+std::string Resolve(const std::string ip);
+
 class Address {
  public:
-  Address() : ip_(kLocalhost), port_(0) {}
+  Address() {
+    set_ip(kLocalhost);
+    set_port(0);
+  }
   explicit Address(std::string address) { FromString(address); }
-  Address(std::string ip, uint16_t port) : ip_(ip), port_(port) {}
+  Address(std::string ip, uint16_t port) {
+    set_ip(ip);
+    set_port(port);
+  }
   Address(const Address& address) {
-    ip_ = address.ip_;
-    port_ = address.port_;
+    set_ip(address.ip_);
+    set_port(address.port_);
   }
   Address(Address&& address) {
-    ip_ = address.ip_;
-    port_ = address.port_;
+    set_ip(address.ip_);
+    set_port(address.port_);
   }
   Address& operator=(const Address& address) {
-    ip_ = address.ip_;
-    port_ = address.port_;
+    set_ip(address.ip_);
+    set_port(address.port_);
     return *this;
   }
   Address& operator=(Address&& address) {
-    ip_ = address.ip_;
-    port_ = address.port_;
+    set_ip(address.ip_);
+    set_port(address.port_);
     return *this;
   }
   ~Address() {}
@@ -42,26 +50,36 @@ class Address {
   void ReadFrom(const struct sockaddr_in& address);
   void WriteTo(struct sockaddr_in& address) const;
 
-  void set_ip(std::string ip) { ip_ = ip; }
+  void set_ip(std::string ip) {
+    ip_ = ip;
+    resolved_ = Resolve(ip_);
+  }
   void set_port(uint16_t port) { port_ = port; }
   std::string ip() const { return ip_; }
   uint16_t port() const { return port_; }
 
   bool operator<(const Address& other) const {
-    if (ip_ == other.ip_) {
+    if (resolved_ == other.resolved_) {
       return port_ < other.port_;
     }
-    return ip_ < other.ip_;
+    return resolved_ < other.resolved_;
   }
 
   bool operator==(const Address& other) const {
-    return (ip_ == other.ip_) && (port_ == other.port_);
+    if (port_ == other.port_) {
+      return true;
+    }
+    if (ip_ == other.ip_) {
+      return true;
+    }
+    return resolved_ == other.resolved_;
   }
 
   bool operator!=(const Address& other) const { return !(*this == other); }
 
  private:
   std::string ip_ = kLocalhost;
+  std::string resolved_ = kLocalhost;
   uint16_t port_ = 0;
 };
 

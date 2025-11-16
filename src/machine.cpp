@@ -5,12 +5,12 @@
 #include <utility>
 #include <vector>
 
-void Machine::Start(const std::string& initial) {
-  if (states_.empty()) {
-    // Nothing to do
-    return;
-  }
+void SignalHandler(int signal) {
+  Info() << "Received signal: " << signal << std::endl;
+  got_sigterm = true;
+}
 
+void Machine::Start(const std::string& initial) {
   std::ostringstream oss;
   oss << name_;
   oss << '@';
@@ -25,69 +25,77 @@ void Machine::Start(const std::string& initial) {
   // Register with server
   RegisterMachine(name_, getpid());
 
-  std::string state = current_;
-  if (!initial.empty()) {
-    state = initial;
-  }
-  current_ = "";
-  Transition(state);
-
-  // Loop receiving messages
-  auto last = std::chrono::system_clock::now();
-  while (running_) {
-    const auto now = std::chrono::system_clock::now();
-    CheckChildren(now);  // Check every loop
-    if (now - last > kPulseInterval) {
-      SendPulse();  // Send every kPulseInterval
-      last = now;
+  if (!states_.empty()) {
+    std::string state = current_;
+    if (!initial.empty()) {
+      state = initial;
     }
-    SendScheduled(now);   // Send any scheduled messages
-    ReceiveMessage(now);  // Waits up to kReceiveTimeout for message
+    current_ = "";
+    Transition(state);
+
+    // Loop receiving messages
+    auto last = std::chrono::system_clock::now();
+    while (running_ && !got_sigterm) {
+      const auto now = std::chrono::system_clock::now();
+      CheckChildren(now);  // Check every loop
+      if (now - last > kPulseInterval) {
+        SendPulse();  // Send every kPulseInterval
+        last = now;
+      }
+      SendScheduled(now);   // Send any scheduled messages
+      ReceiveMessage(now);  // Waits up to kReceiveTimeout for message
+    }
+
+    // Exit current state
+    std::string s = current_;
+    while (!s.empty()) {
+      auto& state = states_.at(s);
+      state.on_exit_();
+      s = state.parent_;
+    }
   }
-}
 
-void Machine::Exit() {
-  Info() << uid_ << " exited" << std::endl;
+  if (!error_message_.empty()) {
+    std::ostringstream oss;
+    oss << "errored ";
+    oss << name_;
+    oss << ' ';
+    oss << error_message_;
 
-  // Exit current state
-  std::string s = current_;
-  while (!s.empty()) {
-    auto& state = states_.at(s);
-    state.on_exit_();
-    s = state.parent_;
+    // Notify parent of error
+    Send(parent_, oss.str());
   }
-
-  std::ostringstream oss;
-  oss << "exited ";
-  oss << name_;
 
   // Notify parent of exit
-  Send(parent_, oss.str());
+  Send(parent_, "exited " + name_);
 
   // Unregister with server
   UnregisterMachine();
 
-  // TODO kill all child machines
+  // Tell all spawned to exit
+  for (const auto& [k, v] : spawned_) {
+    Address address;
+    std::istringstream iss(k);
+    iss >> address;
+    Address server(address.ip(), kServerPort);
+    Send(server, "stop " + std::to_string(address.port()));
+  }
 
   while (!mailbox_->Flushed()) {
   }
 
   on_exit_();
+}
+
+void Machine::Exit() {
+  Info() << uid_ << " exited" << std::endl;
   running_ = false;
   return;
 }
 
 void Machine::Error(const std::string& message) {
   Info() << uid_ << " errored: " << message << std::endl;
-
-  std::ostringstream oss;
-  oss << "errored ";
-  oss << name_;
-  oss << ' ';
-  oss << message;
-
-  // Notify parent of error
-  Send(parent_, oss.str());
+  error_message_ = message;
 
   Exit();
   return;
@@ -102,8 +110,13 @@ void Machine::AddState(State state) {
 }
 
 void Machine::Transition(const std::string& state) {
-  Info() << uid_ << " transitioned: " << current_ << " to " << state
-         << std::endl;
+  Info() << uid_;
+  if (current_.empty()) {
+    Info() << " transitioned to ";
+  } else {
+    Info() << " transitioned from " << current_ << " to ";
+  }
+  Info() << state << std::endl;
   auto current_lineage = StateLineage(current_);
   auto next_lineage = StateLineage(state);
 
@@ -255,7 +268,9 @@ void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
   std::ostringstream oss;
   oss << from;
   const auto key = oss.str();
-  if (t == "started") {
+  if (t == "exit") {
+    Exit();
+  } else if (t == "started") {
     // Start tracking spawned health
     std::string name;
     iss >> name;
@@ -291,9 +306,11 @@ void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
       Error("Unrecognized state: " + s);
     }
   }
-  // Message not handled by hierarchy
-  ::Error() << uid_ << ": Failed to handle message" << std::endl;
-  Error("Unhandled message: " + t);
+  if (t != "exit") {
+    // Message not handled by hierarchy
+    ::Error() << uid_ << ": Failed to handle message" << std::endl;
+    Error("Unhandled message: " + t);
+  }
 }
 
 void Machine::RegisterMachine(const std::string& machine, const int pid) {

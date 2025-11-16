@@ -12,8 +12,8 @@
 int main(int argc, char** argv) {
   if (argc < 5) {
     Error() << "Incorrect parameters, expected <name> <address> <parent> "
-               "<publisher>\n"
-            << std::flush;
+               "<publisher>"
+            << std::endl;
     return -1;
   }
 
@@ -31,7 +31,7 @@ int main(int argc, char** argv) {
       "",
       // On Entry Action
       [&]() {
-        Info() << "main: OnEntry\n" << std::flush;
+        Info() << "main: OnEntry" << std::endl;
         // Send message to subscribe to publisher
         m.Send(publisher, "subscribe");
         // Schedule message to unsubscribe from publisher after 10s
@@ -40,19 +40,16 @@ int main(int argc, char** argv) {
         m.SendAfter(address, "exit", std::chrono::seconds(15));
       },
       // On Exit Action
-      []() { Info() << "main: OnExit\n"
-                    << std::flush; },
+      []() { Info() << "main: OnExit" << std::endl; },
       // Receivers
       {
           {"update",
            [&](const Address& sender, std::istream& args) {
              std::string payload;
              args >> payload;
-             Info() << sender << " updated " << name << ": " << payload << '\n'
-                    << std::flush;
+             Info() << sender << " updated " << name << ": " << payload
+                    << std::endl;
            }},
-          {"exit",
-           [&](const Address& sender, std::istream& args) { m.Exit(); }},
       }));
 
   m.Start();
