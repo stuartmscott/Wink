@@ -135,6 +135,8 @@ class Machine {
       spawned_;
 };
 
+void PruneLineage(std::vector<std::string>&, std::vector<std::string>&);
+
 std::pair<std::string, std::string> ParseMachineName(const std::string& name);
 
 #endif  // INCLUDE_WINK_MACHINE_H_

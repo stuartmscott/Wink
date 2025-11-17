@@ -42,6 +42,10 @@ A simple on/off toggle switch.
 
 Demonstrates various time-related use cases.
 
+## [Turing](turing/README.md)
+
+Demonstrates a Universal Turing Machine.
+
 ## [Useless](useless/README.md)
 
 A Useless State Machine that exits as soon as it is started.

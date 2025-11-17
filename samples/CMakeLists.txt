@@ -18,4 +18,6 @@ add_subdirectory("switch")
 
 add_subdirectory("time")
 
+add_subdirectory("turing")
+
 add_subdirectory("useless")

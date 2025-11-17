@@ -6,8 +6,9 @@
 #include <vector>
 
 void SignalHandler(int signal) {
-  Info() << "Received signal: " << signal << std::endl;
-  got_sigterm = true;
+  if (signal == SIGTERM) {
+    got_sigterm = true;
+  }
 }
 
 void Machine::Start(const std::string& initial) {
@@ -117,23 +118,26 @@ void Machine::Transition(const std::string& state) {
     Info() << " transitioned from " << current_ << " to ";
   }
   Info() << state << std::endl;
-  auto current_lineage = StateLineage(current_);
-  auto next_lineage = StateLineage(state);
 
-  std::reverse(current_lineage.begin(), current_lineage.end());
-  std::reverse(next_lineage.begin(), next_lineage.end());
-  auto current_it = current_lineage.begin();
-  auto next_it = next_lineage.begin();
-  while (current_it != current_lineage.end() && next_it != next_lineage.end()) {
-    if (*current_it == *next_it) {
-      current_it = current_lineage.erase(current_it);
-      next_it = next_lineage.erase(next_it);
-    } else {
-      break;
-    }
+  std::vector<std::string> current_lineage;
+  std::vector<std::string> next_lineage;
+  if (current_ == state) {
+    // Transitions to current state should still trigger on_exit_ & on_entry_.
+    current_lineage.push_back(current_);
+    next_lineage.push_back(current_);
+  } else {
+    current_lineage = StateLineage(current_);
+    next_lineage = StateLineage(state);
+
+    // Reverse both vectors to prune from root down.
+    std::reverse(current_lineage.begin(), current_lineage.end());
+    std::reverse(next_lineage.begin(), next_lineage.end());
+
+    PruneLineage(current_lineage, next_lineage);
+
+    std::reverse(current_lineage.begin(), current_lineage.end());
   }
 
-  std::reverse(current_lineage.begin(), current_lineage.end());
   // Exit current state hierarchy
   for (const auto& s : current_lineage) {
     states_.at(s).on_exit_();
@@ -308,7 +312,8 @@ void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
   }
   if (t != "exit") {
     // Message not handled by hierarchy
-    ::Error() << uid_ << ": Failed to handle message" << std::endl;
+    ::Error() << uid_ << ": Failed to handle message: \"" << t << "\""
+              << std::endl;
     Error("Unhandled message: " + t);
   }
 }
@@ -338,13 +343,29 @@ std::vector<std::string> Machine::StateLineage(const std::string& state) {
   return lineage;
 }
 
+void PruneLineage(std::vector<std::string>& a, std::vector<std::string>& b) {
+  // Vectors contain lineage from root to leaf.
+
+  // Remove ancestors common to both lineages.
+  auto a_it = a.begin();
+  auto b_it = b.begin();
+  while (a_it != a.end() && b_it != b.end()) {
+    if (*a_it == *b_it) {
+      a_it = a.erase(a_it);
+      b_it = b.erase(b_it);
+    } else {
+      break;
+    }
+  }
+}
+
 // Parse machine name into binary (directory/file), and optional tag.
 std::pair<std::string, std::string> ParseMachineName(const std::string& name) {
   std::string binary = name;
   std::string tag;
   if (const auto i = name.find('#'); i != std::string::npos) {
     binary = name.substr(0, i);
-    tag = name.substr(i);
+    tag = name.substr(i + 1);
   }
   return {binary, tag};
 }

@@ -399,7 +399,7 @@ TEST(MachineTest, Transition_Hierarchy) {
   m.Transition("second");
 
   // Although 'first' is the initial state, the
-  // machine hasn't started yet so it wasn't entered.
+  // machine hasn't started yet so it wasn't entered yet.
 
   ASSERT_EQ(std::vector<int>{2}, entries);
   ASSERT_EQ(std::vector<int>{}, exits);
@@ -569,4 +569,132 @@ TEST(MachineTest, Spawn_Remote) {
   ASSERT_EQ(kTestIP, arg.toIP);
   ASSERT_EQ(kServerPort, arg.toPort);
   ASSERT_EQ(std::string("start useless/Useless :42424"), arg.message);
+}
+
+TEST(MachineTest, PruneLineage) {
+  /*
+           1
+          / \
+         2   3
+        / \   \
+       4   5   6
+  */
+
+  // Root to Root
+  {
+    std::vector<std::string> a{"1"};
+    std::vector<std::string> b{"1"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{}, a);
+    ASSERT_EQ(std::vector<std::string>{}, b);
+  }
+
+  // Root to Parent
+  {
+    std::vector<std::string> a{"1"};
+    std::vector<std::string> b{"1", "2"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{}, a);
+    ASSERT_EQ(std::vector<std::string>{"2"}, b);
+  }
+
+  // Root to Child
+  {
+    std::vector<std::string> a{"1"};
+    std::vector<std::string> b{"1", "2", "4"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{}, a);
+    ASSERT_EQ((std::vector<std::string>{"2", "4"}), b);
+  }
+
+  // Parent to Root
+  {
+    std::vector<std::string> a{"1", "2"};
+    std::vector<std::string> b{"1"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{"2"}, a);
+    ASSERT_EQ(std::vector<std::string>{}, b);
+  }
+
+  // Parent to Parent
+  {
+    std::vector<std::string> a{"1", "2"};
+    std::vector<std::string> b{"1", "3"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{"2"}, a);
+    ASSERT_EQ(std::vector<std::string>{"3"}, b);
+  }
+
+  // Parent to Child
+  {
+    std::vector<std::string> a{"1", "2"};
+    std::vector<std::string> b{"1", "2", "4"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{}, a);
+    ASSERT_EQ(std::vector<std::string>{"4"}, b);
+  }
+
+  // Parent to Distant Child
+  {
+    std::vector<std::string> a{"1", "2"};
+    std::vector<std::string> b{"1", "3", "6"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{"2"}, a);
+    ASSERT_EQ((std::vector<std::string>{"3", "6"}), b);
+  }
+
+  // Child to Root
+  {
+    std::vector<std::string> a{"1", "2", "4"};
+    std::vector<std::string> b{"1"};
+    PruneLineage(a, b);
+    ASSERT_EQ((std::vector<std::string>{"2", "4"}), a);
+    ASSERT_EQ(std::vector<std::string>{}, b);
+  }
+
+  // Child to Parent
+  {
+    std::vector<std::string> a{"1", "2", "4"};
+    std::vector<std::string> b{"1", "2"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{"4"}, a);
+    ASSERT_EQ(std::vector<std::string>{}, b);
+  }
+
+  // Child to Distant Parent
+  {
+    std::vector<std::string> a{"1", "2", "4"};
+    std::vector<std::string> b{"1", "3"};
+    PruneLineage(a, b);
+    ASSERT_EQ((std::vector<std::string>{"2", "4"}), a);
+    ASSERT_EQ(std::vector<std::string>{"3"}, b);
+  }
+
+  // Child to Child
+  {
+    std::vector<std::string> a{"1", "2", "4"};
+    std::vector<std::string> b{"1", "2", "5"};
+    PruneLineage(a, b);
+    ASSERT_EQ(std::vector<std::string>{"4"}, a);
+    ASSERT_EQ(std::vector<std::string>{"5"}, b);
+  }
+
+  // Child to Distant Child
+  {
+    std::vector<std::string> a{"1", "2", "4"};
+    std::vector<std::string> b{"1", "3", "6"};
+    PruneLineage(a, b);
+    ASSERT_EQ((std::vector<std::string>{"2", "4"}), a);
+    ASSERT_EQ((std::vector<std::string>{"3", "6"}), b);
+  }
+}
+
+TEST(MachineTest, ParseMachineName) {
+  const auto a = ParseMachineName("foo/Bar");
+  ASSERT_EQ("foo/Bar", a.first);
+  ASSERT_EQ("", a.second);
+
+  const auto b = ParseMachineName("foo/Bar#Baz");
+  ASSERT_EQ("foo/Bar", b.first);
+  ASSERT_EQ("Baz", b.second);
 }

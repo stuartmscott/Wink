@@ -7,8 +7,6 @@
 int StartMachine(Mailbox& mailbox, const Address address,
                  const std::string machine, Address& destination,
                  const std::vector<std::string> args, const bool follow) {
-  Info() << "Address: " << address << std::endl;
-
   // Send Request
   Address server(destination.ip(), kServerPort);
   std::ostringstream oss;

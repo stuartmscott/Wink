@@ -50,8 +50,7 @@ void AsyncMailbox::Send(const Address& to, const std::string& message) {
   uint64_t seq_num = 0;
   if (const auto& it = outgoing_seq_nums_.find(to);
       it != outgoing_seq_nums_.end()) {
-    it->second++;
-    seq_num = it->second;
+    seq_num = ++(it->second);
   } else {
     outgoing_seq_nums_[to] = 0;
   }
@@ -120,7 +119,7 @@ void AsyncMailbox::BackgroundReceive() {
         it != incoming_seq_nums_.end()) {
       if (seq_num <= it->second) {
         Info() << "Dropping duplicate message: " << from << ": " << seq_num
-               << std ::endl;
+               << " <= " << it->second << std ::endl;
         // Drop duplicate packet
         // TODO handle sequence number overflow and wrap around
         return;

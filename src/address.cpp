@@ -32,7 +32,6 @@ std::string Resolve(const std::string ip) {
         break;
       }
     }
-    Info() << "Resolved " << ip << " to " << resolved << std::endl;
     freeaddrinfo(result);
   }
   return resolved;

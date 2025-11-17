@@ -72,10 +72,9 @@ int Server::Serve(const std::string& directory) {
         parameters.push_back(sender.ToString());
 
         // Remaining parameters are given by spawner.
-        while (iss.good()) {
-          std::string p;
-          iss >> p;
-          parameters.push_back(p);
+        std::string parameter;
+        while (iss >> parameter) {
+          parameters.push_back(parameter);
         }
 
         if (const auto result = Start(filepath.string(), parameters);
