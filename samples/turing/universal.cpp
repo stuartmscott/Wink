@@ -98,7 +98,8 @@ int main(int argc, char** argv) {
       // On Exit Action
       []() { Info() << "Initial: OnExit" << std::endl; },
       // Receivers
-      {{"", [&](const Address& sender, std::istream& args) {
+      {{"exit", [&](const Address& sender, std::istream& args) {}},
+       {"", [&](const Address& sender, std::istream& args) {
           requester = sender;
           tape.Assign(args);
           m.Transition(std::string{first_state});

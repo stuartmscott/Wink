@@ -7,7 +7,6 @@
 int Server::Serve(const std::string& directory) {
   running_ = true;
   if (!log_.empty()) {
-    Info() << "Log: " << log_ << std::endl;
     if (const auto result = LogToFile(log_, "server"); result < 0) {
       Error() << "Failed to setup logging" << std::endl;
       return -1;

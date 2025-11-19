@@ -102,8 +102,6 @@ class Machine {
   void Spawn(const std::string& machine, const Address& destination,
              const std::vector<std::string>& args);
 
-  std::function<void()> on_exit_ = []() { _exit(0); };
-
  private:
   void CheckChildren(const std::chrono::system_clock::time_point now);
   void SendPulse();

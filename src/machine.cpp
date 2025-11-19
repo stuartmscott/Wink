@@ -84,8 +84,6 @@ void Machine::Start(const std::string& initial) {
 
   while (!mailbox_->Flushed()) {
   }
-
-  on_exit_();
 }
 
 void Machine::Exit() {

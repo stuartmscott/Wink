@@ -11,7 +11,7 @@ constexpr uint8_t kMaxRetries = 5;
 
 constexpr std::chrono::seconds kNoTimeout(0);  // Unlimited
 constexpr std::chrono::seconds kSendTimeout(1);
-constexpr std::chrono::seconds kReceiveTimeout(3);
+constexpr std::chrono::seconds kReceiveTimeout(2);
 
 constexpr std::chrono::seconds kHeartbeatTimeout(60);
 constexpr std::chrono::seconds kPulseInterval(10);

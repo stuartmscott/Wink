@@ -24,9 +24,7 @@ class Server {
  public:
   explicit Server(Address& address, Mailbox& mailbox,
                   const std::string log = "")
-      : address_(address), mailbox_(mailbox), log_(log) {
-    Info() << "Log: " << log_ << std::endl;
-  }
+      : address_(address), mailbox_(mailbox), log_(log) {}
   Server(const Server& s) = delete;
   Server(Server&& s) = delete;
   Server& operator=(const Server& s) = delete;

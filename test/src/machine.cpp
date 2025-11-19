@@ -16,8 +16,6 @@ TEST(MachineTest, UID) {
   Address parent(":42001");
 
   Machine m(name, mailbox, address, parent);
-  // Override exit
-  m.on_exit_ = []() {};
   m.AddState(State(
       // State Name
       "main",
@@ -42,8 +40,6 @@ TEST(MachineTest, UID_Tag) {
   Address parent(":42001");
 
   Machine m(name, mailbox, address, parent);
-  // Override exit
-  m.on_exit_ = []() {};
   m.AddState(State(
       // State Name
       "main",
@@ -71,8 +67,6 @@ TEST(MachineTest, Start) {
   int mainOnExit = 0;
 
   Machine m(name, mailbox, address, parent);
-  // Override exit
-  m.on_exit_ = []() {};
   m.AddState(State(
       // State Name
       "main",
@@ -111,8 +105,6 @@ TEST(MachineTest, Start_InitialState) {
   int secondOnExit = 0;
 
   Machine m(name, mailbox, address, parent);
-  // Override exit
-  m.on_exit_ = []() {};
   m.AddState(State(
       // State Name
       "first",
@@ -183,8 +175,6 @@ TEST(MachineTest, Exit) {
   mailbox->sendResults_.push_back(result);
 
   Machine m(name, mailbox, address, parent);
-  // Override exit
-  m.on_exit_ = []() {};
   std::thread worker{[&m] { m.Start(); }};
   m.Exit();
 
@@ -229,8 +219,6 @@ TEST(MachineTest, Error) {
   mailbox->sendResults_.push_back(result);
 
   Machine m(name, mailbox, address, parent);
-  // Override exit
-  m.on_exit_ = []() {};
   std::thread worker{[&m] { m.Start(); }};
   m.Error("AHHHH");
 
@@ -474,8 +462,6 @@ TEST(MachineTest, SendAt) {
   Address parent(":42001");
 
   Machine m(name, address, parent);
-  // Override exit
-  m.on_exit_ = []() {};
   m.AddState(State(
       // State Name
       "main",
@@ -505,8 +491,6 @@ TEST(MachineTest, SendAfter) {
   Address parent(":42001");
 
   Machine m(name, address, parent);
-  // Override exit
-  m.on_exit_ = []() {};
   m.AddState(State(
       // State Name
       "main",

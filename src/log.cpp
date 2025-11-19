@@ -43,6 +43,8 @@ int LogToFile(const std::string& directory, const std::string& name) {
   std::filesystem::path filepath(directory);
   filepath /= filename.str();
 
+  Info() << "Log: " << filepath.str() << std::endl;
+
   int fd = open(filepath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
   if (fd < 0) {
     Error() << "Failed to open file: " << filepath << ": "
