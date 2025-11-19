@@ -9,7 +9,7 @@ Send a message after a given delay.
 ### Usage
 
 ```
-build/src/Wink start time/After
+$ Wink start time/After
 ```
 
 ## At
@@ -19,7 +19,7 @@ Send a message at a specific time.
 ### Usage
 
 ```
-build/src/Wink start time/At
+$ Wink start time/At
 ```
 
 ## StopWatch
@@ -44,9 +44,9 @@ The state `idle` is the parent of `timing`, so when `timing` receives an `idle`,
 ### Usage
 
 ```
-build/src/Wink start time/StopWatch
-build/src/Wink send <stopwatch> start
-build/src/Wink send <stopwatch> stop
+$ Wink start time/StopWatch
+$ Wink send <stopwatch> start
+$ Wink send <stopwatch> stop
 
 ```
 
@@ -57,6 +57,6 @@ Implements a Ticker which sends the spawner a `tick` message periodically.
 ### Usage
 
 ```
-build/src/Wink start time/Ticker 2 # Receive tick every 2 seconds
-build/src/Wink send <ticker> exit
+$ Wink start time/Ticker 2 # Receive tick every 2 seconds
+$ Wink send <ticker> exit
 ```

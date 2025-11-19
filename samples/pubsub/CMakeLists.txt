@@ -1,27 +1,29 @@
 set(LIBRARY_NAME libWink)
 
-set(INCLUDE_DIR "../../include")
-
 set(PUBLISHER_NAME Publisher)
 
-set(SOURCE
+add_executable(${PUBLISHER_NAME})
+
+target_sources(${PUBLISHER_NAME}
+  PRIVATE
     "publisher.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${PUBLISHER_NAME} ${SOURCE})
-
-target_link_libraries(${PUBLISHER_NAME} ${LIBRARY_NAME})
+target_link_libraries(${PUBLISHER_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)
 
 set(SUBSCRIBER_NAME Subscriber)
 
-set(SOURCE
+add_executable(${SUBSCRIBER_NAME})
+
+target_sources(${SUBSCRIBER_NAME}
+  PRIVATE
     "subscriber.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${SUBSCRIBER_NAME} ${SOURCE})
-
-target_link_libraries(${SUBSCRIBER_NAME} ${LIBRARY_NAME})
+target_link_libraries(${SUBSCRIBER_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)

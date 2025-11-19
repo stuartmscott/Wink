@@ -1,27 +1,29 @@
 set(LIBRARY_NAME libWink)
 
-set(INCLUDE_DIR "../../include")
-
 set(PARENT_NAME Parent)
 
-set(SOURCE
+add_executable(${PARENT_NAME})
+
+target_sources(${PARENT_NAME}
+  PRIVATE
     "parent.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${PARENT_NAME} ${SOURCE})
-
-target_link_libraries(${PARENT_NAME} ${LIBRARY_NAME})
+target_link_libraries(${PARENT_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)
 
 set(CHILD_NAME Child)
 
-set(SOURCE
+add_executable(${CHILD_NAME})
+
+target_sources(${CHILD_NAME}
+  PRIVATE
     "child.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${CHILD_NAME} ${SOURCE})
-
-target_link_libraries(${CHILD_NAME} ${LIBRARY_NAME})
+target_link_libraries(${CHILD_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)

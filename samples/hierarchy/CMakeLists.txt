@@ -1,63 +1,71 @@
 set(LIBRARY_NAME libWink)
 
-set(INCLUDE_DIR "../../include")
-
 set(TARGET_NAME Empty)
 
-set(SOURCE
+add_executable(${TARGET_NAME})
+
+target_sources(${TARGET_NAME}
+  PRIVATE
     "empty.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${TARGET_NAME} ${SOURCE})
-
-target_link_libraries(${TARGET_NAME} ${LIBRARY_NAME})
+target_link_libraries(${TARGET_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)
 
 set(TARGET_NAME Leaf)
 
-set(SOURCE
+add_executable(${TARGET_NAME})
+
+target_sources(${TARGET_NAME}
+  PRIVATE
     "leaf.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${TARGET_NAME} ${SOURCE})
-
-target_link_libraries(${TARGET_NAME} ${LIBRARY_NAME})
+target_link_libraries(${TARGET_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)
 
 set(TARGET_NAME Simple)
 
-set(SOURCE
+add_executable(${TARGET_NAME})
+
+target_sources(${TARGET_NAME}
+  PRIVATE
     "simple.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${TARGET_NAME} ${SOURCE})
-
-target_link_libraries(${TARGET_NAME} ${LIBRARY_NAME})
+target_link_libraries(${TARGET_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)
 
 set(TARGET_NAME Bigger)
 
-set(SOURCE
+add_executable(${TARGET_NAME})
+
+target_sources(${TARGET_NAME}
+  PRIVATE
     "bigger.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${TARGET_NAME} ${SOURCE})
-
-target_link_libraries(${TARGET_NAME} ${LIBRARY_NAME})
+target_link_libraries(${TARGET_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)
 
 set(TARGET_NAME Forrest)
 
-set(SOURCE
+add_executable(${TARGET_NAME})
+
+target_sources(${TARGET_NAME}
+  PRIVATE
     "forrest.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${TARGET_NAME} ${SOURCE})
-
-target_link_libraries(${TARGET_NAME} ${LIBRARY_NAME})
+target_link_libraries(${TARGET_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)

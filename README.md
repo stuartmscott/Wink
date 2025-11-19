@@ -308,7 +308,8 @@ cmake --build build
 ## Test
 
 ```
-(cd build && ctest)
+ctest --test-dir build
+ctest --test-dir build -R SpecificTest
 ```
 
 ## Docker
@@ -317,11 +318,18 @@ cmake --build build
 docker build . -t wink:latest
 ```
 
+## Installation
+
+```
+cmake --install build
+```
+
 # Usage
 
 ## Client
+
 ```
-./build/src/Wink
+$ Wink
 ```
 
 ### Start
@@ -329,9 +337,9 @@ docker build . -t wink:latest
 Starts a new machine from a binary.
 
 ```
-./build/src/Wink start [options] <name>
-./build/src/Wink start [options] <name> :<port>
-./build/src/Wink start [options] <name> <ip>:<port>
+$ Wink start [options] <name>
+$ Wink start [options] <name> :<port>
+$ Wink start [options] <name> <ip>:<port>
 ```
 
 ### Stop
@@ -339,8 +347,8 @@ Starts a new machine from a binary.
 Stops an existing machine.
 
 ```
-./build/src/Wink stop [options] :<port>
-./build/src/Wink stop [options] <ip>:<port>
+$ Wink stop [options] :<port>
+$ Wink stop [options] <ip>:<port>
 ```
 
 ### Send
@@ -348,8 +356,8 @@ Stops an existing machine.
 Sends a message to a machine.
 
 ```
-./build/src/Wink send [options] :<port> <message>
-./build/src/Wink send [options] <ip>:<port> <message>
+$ Wink send [options] :<port> <message>
+$ Wink send [options] <ip>:<port> <message>
 ```
 
 ### List
@@ -357,16 +365,16 @@ Sends a message to a machine.
 List existing machines running on a server.
 
 ```
-./build/src/Wink list [options]
-./build/src/Wink list [options] :<port>
-./build/src/Wink list [options] <ip>:<port>
+$ Wink list [options]
+$ Wink list [options] :<port>
+$ Wink list [options] <ip>:<port>
 ```
 
 ### Help
 
 ```
-./build/src/Wink help
-./build/src/Wink help <command>
+$ Wink help
+$ Wink help <command>
 ```
 
 ## Server
@@ -374,14 +382,14 @@ List existing machines running on a server.
 Starts the WinkServer serving from the given directory.
 
 ```
-./build/src/WinkServer serve <directory>
+$ WinkServer serve <directory>
 ```
 
 ### Help
 
 ```
-./build/src/WinkServer help
-./build/src/WinkServer help <command>
+$ WinkServer help
+$ WinkServer help <command>
 ```
 
 ---

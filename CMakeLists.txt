@@ -15,6 +15,9 @@ project(${PROJECT_NAME} VERSION 0.0.1)
 
 set(CMAKE_STATIC_LIBRARY_PREFIX "")
 
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
 add_subdirectory("src")
 
 add_subdirectory("samples")
@@ -24,15 +27,5 @@ if(POLICY CMP0135)
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-# Fetch GoogleTest Library
-include(FetchContent)
-FetchContent_Declare(
-  GoogleTest
-  GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        52eb8108c5bdec04579160ae17225d66034bd723 # release-1.17.0
-)
-FetchContent_MakeAvailable(GoogleTest)
-
 enable_testing()
-
 add_subdirectory("test/src")

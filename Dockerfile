@@ -17,4 +17,4 @@ WORKDIR /Wink
 
 RUN cmake -S . -B build
 RUN cmake --build build
-RUN (cd build && ctest --output-on-failure)
+RUN ctest --test-dir build --output-on-failure

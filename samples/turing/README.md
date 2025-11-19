@@ -42,11 +42,11 @@ Next, the machine will accept a request and perform the following steps;
 Generates a repeating sequence of 0_1_0_1_0_1... (until '.' is encountered).
 
 ```
-$ build/src/Wink start turing/Universal localhost _ "A_0RB;A..NH;B__RC;B..NH;C_1RD;C..NH;D__RA;D..NH"
+$ Wink start turing/Universal localhost _ "A_0RB;A..NH;B__RC;B..NH;C_1RD;C..NH;D__RA;D..NH"
 > localhost:42000 start turing/Universal :0 _ A_0RB;A..NH;B__RC;B..NH;C_1RD;C..NH;D__RA;D..NH
 < <address> started turing/Universal
 
-$ build/src/Wink send -r 1 <address> "_______________."
+$ Wink send -r 1 <address> "_______________."
 > <address> _______________.
 < <address> 0_1_0_1_0_1_0_1.
 ```
@@ -56,11 +56,11 @@ $ build/src/Wink send -r 1 <address> "_______________."
 Generates six ones on the tape.
 
 ```
-$ build/src/Wink start turing/Universal localhost 0 "A01RB;A11LC;B01LA;B11RB;C01LB;C11NH"
+$ Wink start turing/Universal localhost 0 "A01RB;A11LC;B01LA;B11RB;C01LB;C11NH"
 > localhost:42000 start turing/Universal :0 0 A01RB;A11LC;B01LA;B11RB;C01LB;C11NH
 < <address> started turing/Universal
 
-$ build/src/Wink send -r 1 <address> "000000000000000"
+$ Wink send -r 1 <address> "000000000000000"
 > <address> 000000000000000
 < <address> 111111000000000000
 ```

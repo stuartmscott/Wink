@@ -5,6 +5,6 @@ A State Machine that accepts a number and prints 'fizz' if the number is divisib
 ## Usage
 
 ```
-build/src/Wink start fizzbuzz/FizzBuzz
-for i in {1..15} ; do build/src/Wink send <fizzbuzz> $i ; done
+$ Wink start fizzbuzz/FizzBuzz
+$ for i in {1..15} ; do Wink send <fizzbuzz> $i ; done
 ```

@@ -1,15 +1,15 @@
 set(LIBRARY_NAME libWink)
 
-set(INCLUDE_DIR "../../include")
-
 set(TARGET_NAME Switch)
 
-set(SOURCE
+add_executable(${TARGET_NAME})
+
+target_sources(${TARGET_NAME}
+  PRIVATE
     "switch.cpp"
 )
 
-include_directories(${INCLUDE_DIR})
-
-add_executable(${TARGET_NAME} ${SOURCE})
-
-target_link_libraries(${TARGET_NAME} ${LIBRARY_NAME})
+target_link_libraries(${TARGET_NAME}
+  PRIVATE
+    ${LIBRARY_NAME}
+)

@@ -2,10 +2,6 @@
 
 This directory contains samples of defining State Machines in Wink.
 
-## [Blinky](blinky/README.md)
-
-A State Machine for controlling an LED with a Raspberry Pi.
-
 ## [Echo](echo/README.md)
 
 A State Machine that replies to every message with an identical message.
@@ -49,7 +45,3 @@ Demonstrates a Universal Turing Machine.
 ## [Useless](useless/README.md)
 
 A Useless State Machine that exits as soon as it is started.
-
-## [Version](version/README.md)
-
-Demonstrates how multiple versions of the same State Machine can coexist.
