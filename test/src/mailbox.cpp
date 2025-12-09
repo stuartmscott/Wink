@@ -6,7 +6,7 @@
 #include <cstring>
 #include <string>
 
-bool MockMailbox::Receive(Address& from, std::string& message) {
+bool MockMailbox::Receive(Address& from, Address& to, std::string& message) {
   const auto index = receiveArgs_.size();
   receiveArgs_.push_back(true);
   if (index >= receiveResults_.size()) {
@@ -15,6 +15,8 @@ bool MockMailbox::Receive(Address& from, std::string& message) {
   const auto result = receiveResults_.at(index);
   from.set_ip(result.fromIP);
   from.set_port(result.fromPort);
+  to.set_ip(result.toIP);
+  to.set_port(result.toPort);
   message = result.message;
   return result.result;
 }
@@ -43,8 +45,10 @@ void setup_default_mailbox(MockMailbox& mailbox) {
   // Set mock receive result
   {
     ReceiveResult result;
-    result.fromIP = kTestIP;
+    result.fromIP = kTestUnicastIP;
     result.fromPort = kTestPort;
+    result.toIP = kTestUnicastIP;
+    result.toPort = kTestPort;
     result.result = true;
     std::ostringstream oss;
     oss << "started ";

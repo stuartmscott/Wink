@@ -32,6 +32,21 @@ TEST(AddressTest, WriteTo_ResolveHostname) {
   ASSERT_EQ(htons(kTestPort), a.sin_port);
 }
 
+TEST(AddressTest, IsMulticast) {
+  {
+    Address address("localhost", kTestPort);
+    ASSERT_FALSE(address.IsMulticast());
+  }
+  {
+    Address address("192.168.1.2", kTestPort);
+    ASSERT_FALSE(address.IsMulticast());
+  }
+  {
+    Address address("232.168.1.2", kTestPort);
+    ASSERT_TRUE(address.IsMulticast());
+  }
+}
+
 TEST(AddressTest, Stream) {
   Address a1(kLocalhost, kTestPort);
   std::ostringstream oss;

@@ -7,7 +7,8 @@
 #include <string>
 
 typedef std::function<void()> Trigger;
-typedef std::function<void(const Address&, std::istream&)> Receiver;
+typedef std::function<void(const Address&, const Address&, std::istream&)>
+    Receiver;
 typedef std::map<const std::string, Receiver> ReceiverMap;
 
 class State {

@@ -1,6 +1,8 @@
 // Copyright 2022-2025 Stuart Scott
 #include <Wink/address.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 #include <chrono>
@@ -16,8 +18,10 @@ int main(int argc, char** argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   std::chrono::time_point<std::chrono::system_clock> start;
 
@@ -32,14 +36,14 @@ int main(int argc, char** argv) {
       []() {},
       // Receivers
       {
-          {"idle", [&](const Address& sender,
+          {"idle", [&](const Address& from, const Address& to,
                        std::istream& args) { m.Transition("idle"); }},
           {"start",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              start = std::chrono::system_clock::now();
              m.Transition("timing");
            }},
-          {"stop", [&](const Address& sender,
+          {"stop", [&](const Address& from, const Address& to,
                        std::istream& args) { m.Transition("idle"); }},
       }));
 
@@ -55,7 +59,7 @@ int main(int argc, char** argv) {
       // Receivers
       {
           {"stop",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              const auto now = std::chrono::system_clock::now();
              const auto delta =
                  std::chrono::floor<std::chrono::seconds>(now - start).count();
@@ -63,7 +67,7 @@ int main(int argc, char** argv) {
              oss << "elapsed ";
              oss << delta;
              oss << " seconds";
-             m.Send(sender, oss.str());
+             m.Send(from, oss.str());
              m.Transition("idle");
            }},
       }));

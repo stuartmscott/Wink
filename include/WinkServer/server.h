@@ -1,6 +1,6 @@
 // Copyright 2022-2025 Stuart Scott
-#ifndef INCLUDE_WINK_SERVER_SERVER_H_
-#define INCLUDE_WINK_SERVER_SERVER_H_
+#ifndef INCLUDE_WINKSERVER_SERVER_H_
+#define INCLUDE_WINKSERVER_SERVER_H_
 
 #include <Wink/address.h>
 #include <Wink/client.h>
@@ -51,4 +51,4 @@ class Server {
   std::map<uint16_t, pid_t> pids_;
 };
 
-#endif  // INCLUDE_WINK_SERVER_SERVER_H_
+#endif  // INCLUDE_WINKSERVER_SERVER_H_

@@ -2,6 +2,8 @@
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 #include <iostream>
@@ -16,8 +18,10 @@ int main(int argc, char** argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   m.AddState(State(
       // State Name
@@ -36,33 +40,33 @@ int main(int argc, char** argv) {
       // Receivers
       {
           {"started",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              std::string child;
              args >> child;
-             Info() << "Parent: " << sender << ' ' << child << " has started"
+             Info() << "Parent: " << from << ' ' << child << " has started"
                     << std::endl;
            }},
           {"pulsed",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              std::string child;
              args >> child;
-             Info() << "Parent: " << sender << ' ' << child << " has pulsed"
+             Info() << "Parent: " << from << ' ' << child << " has pulsed"
                     << std::endl;
            }},
           {"errored",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              std::string child;
              args >> child;
              std::ostringstream os;
              os << args.rdbuf();
-             Info() << "Parent: " << sender << ' ' << child
+             Info() << "Parent: " << from << ' ' << child
                     << " has errored: " << os.str() << std::endl;
            }},
           {"exited",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              std::string child;
              args >> child;
-             Info() << "Parent: " << sender << ' ' << child << " has exited"
+             Info() << "Parent: " << from << ' ' << child << " has exited"
                     << std::endl;
              m.Spawn(child);  // Retry
            }},

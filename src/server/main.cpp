@@ -79,7 +79,8 @@ int main(int argc, char** argv) {
       }
     }
 
-    AsyncMailbox mailbox(new UDPSocket(address));
+    UDPSocket socket(address);
+    AsyncMailbox mailbox(socket);
     Server s(address, mailbox, log);
     return s.Serve(parameters.at(0));
   } else if (command == "help") {

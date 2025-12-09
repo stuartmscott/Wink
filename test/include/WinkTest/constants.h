@@ -12,7 +12,8 @@ constexpr size_t kMaxTestPayload(20);
 constexpr uint16_t kTestPort(42424);
 constexpr pid_t kTestPID(2424);
 
-constexpr std::string kTestIP("12.34.56.78");
+constexpr std::string kTestUnicastIP("12.34.56.78");
+constexpr std::string kTestMulticastIP("232.34.56.78");
 constexpr std::string kTestBinary("wink.bin");
 constexpr std::string kTestMessage("test 1234");
 

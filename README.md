@@ -58,6 +58,8 @@ If the optional empty receiver exists, it is triggered if no other receivers mat
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 int main(int argc, char **argv) {
@@ -69,8 +71,10 @@ int main(int argc, char **argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   m.AddState(State(
       // State Name
@@ -84,9 +88,9 @@ int main(int argc, char **argv) {
       []() {},
       // Receivers
       {
-          {"on", [&](const Address &sender,
+          {"on", [&](const Address &from, const Address& to,
                      std::istream &args) { m.Transition("on"); }},
-          {"off", [&](const Address &sender,
+          {"off", [&](const Address &from, const Address& to,
                       std::istream &args) { m.Transition("off"); }},
       }));
 
@@ -137,6 +141,8 @@ When a parent is notified that a child has errored, it can chose to do nothing, 
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 int main(int argc, char **argv) {
@@ -148,8 +154,10 @@ int main(int argc, char **argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   m.AddState(State(
       // State Name
@@ -167,34 +175,34 @@ int main(int argc, char **argv) {
       // Receivers
       {
           {"started",
-           [&](const Address &sender, std::istream &args) {
+           [&](const Address &from, const Address& to, std::istream &args) {
              std::string child;
              args >> child;
-             info() << "Parent: " << sender << ' ' << child << " has started"
+             info() << "Parent: " << from << ' ' << child << " has started"
                     << std::endl;
            }},
           {"pulsed",
-           [&](const Address &sender, std::istream &args) {
+           [&](const Address &from, const Address& to, std::istream &args) {
              std::string child;
              args >> child;
-             info() << "Parent: " << sender << ' ' << child << " has pulsed"
+             info() << "Parent: " << from << ' ' << child << " has pulsed"
                     << std::endl;
            }},
           {"errored",
-           [&](const Address &sender, std::istream &args) {
+           [&](const Address &from, const Address& to, std::istream &args) {
              std::string child;
              args >> child;
              std::ostringstream os;
              os << args.rdbuf();
-             info() << "Parent: " << sender << ' ' << child
+             info() << "Parent: " << from << ' ' << child
                     << " has errored: " << os.str()
                     << std::endl;
            }},
           {"exited",
-           [&](const Address &sender, std::istream &args) {
+           [&](const Address &from, const Address& to, std::istream &args) {
              std::string child;
              args >> child;
-             info() << "Parent: " << sender << ' ' << child << " has exited"
+             info() << "Parent: " << from << ' ' << child << " has exited"
                     << std::endl;
              m.Transition("main"); // Retry
            }},
@@ -212,6 +220,8 @@ int main(int argc, char **argv) {
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 int main(int argc, char **argv) {
@@ -223,8 +233,10 @@ int main(int argc, char **argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   m.AddState(State(
       // State Name
@@ -358,6 +370,14 @@ Sends a message to a machine.
 ```
 $ Wink send [options] :<port> <message>
 $ Wink send [options] <ip>:<port> <message>
+```
+
+### Listen
+
+Listens for multicast messages on the given group(s).
+
+```
+$ Wink listen [options] <group>
 ```
 
 ### List

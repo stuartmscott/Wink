@@ -16,13 +16,14 @@ int Server::Serve(const std::string& directory) {
   Info() << "Directory: " << directory << std::endl;
   Info() << "Address: " << address_ << std::endl;
 
-  Address sender;
+  Address from;
+  Address to;
   std::string message;
   while (running_) {
-    if (!mailbox_.Receive(sender, message)) {
+    if (!mailbox_.Receive(from, to, message)) {
       continue;
     }
-    Info() << "< " << sender << ' ' << message << std::endl;
+    Info() << to << " < " << from << ' ' << message << std::endl;
 
     std::istringstream iss(message);
     std::string command;
@@ -68,7 +69,7 @@ int Server::Serve(const std::string& directory) {
         parameters.push_back(destination.ToString());
 
         // Third parameter is the address of the spawner.
-        parameters.push_back(sender.ToString());
+        parameters.push_back(from.ToString());
 
         // Remaining parameters are given by spawner.
         std::string parameter;
@@ -100,24 +101,24 @@ int Server::Serve(const std::string& directory) {
       iss >> pid;
       // TODO secure with mutex
       {
-        machines_.emplace(sender.port(), machine);
-        pids_.emplace(sender.port(), pid);
+        machines_.emplace(from.port(), machine);
+        pids_.emplace(from.port(), pid);
       }
     } else if (command == "unregister") {
       // TODO secure with mutex
       {
-        if (const auto it = pids_.find(sender.port()); it != pids_.end()) {
+        if (const auto it = pids_.find(from.port()); it != pids_.end()) {
           // remove port from machines and pids maps
-          machines_.erase(sender.port());
-          pids_.erase(sender.port());
+          machines_.erase(from.port());
+          pids_.erase(from.port());
         } else {
-          Error() << "Unrecognized port " << sender.port() << std::endl;
+          Error() << "Unrecognized port " << from.port() << std::endl;
         }
       }
     } else if (command == "list") {
       // TODO handle in worker threat
       {
-        SendMessage(mailbox_, sender, List());
+        SendMessage(mailbox_, from, List());
       }
     } else {
       Error() << "Failed to parse " << message << std::endl;

@@ -22,13 +22,14 @@ int StartMachine(Mailbox& mailbox, const Address address,
   SendMessage(mailbox, server, request);
 
   // Recieve Reply
+  Address to;
   std::string message;
-  if (!ReceiveMessage(mailbox, destination, message)) {
+  if (!ReceiveMessage(mailbox, destination, to, message)) {
     Error() << "Failed to receive \"started\" message: " << std::strerror(errno)
             << std::endl;
     return -1;
   }
-  Info() << "< " << destination << ' ' << message << std::endl;
+  Info() << to << " < " << destination << ' ' << message << std::endl;
   std::istringstream iss(message);
   std::string command;
   iss >> command;
@@ -51,10 +52,10 @@ int StartMachine(Mailbox& mailbox, const Address address,
 
   Address from;
   while (follow) {
-    if (!mailbox.Receive(from, message)) {
+    if (!mailbox.Receive(from, to, message)) {
       continue;
     }
-    Info() << "< " << from << ' ' << message << std::endl;
+    Info() << to << " < " << from << ' ' << message << std::endl;
     std::istringstream iss(message);
     std::string command;
     iss >> command;
@@ -87,10 +88,11 @@ void SendMessages(Mailbox& mailbox, const Address to,
   }
 }
 
-bool ReceiveMessage(Mailbox& mailbox, Address& from, std::string& message) {
+bool ReceiveMessage(Mailbox& mailbox, Address& from, Address& to,
+                    std::string& message) {
   bool success = false;
   for (uint8_t i = 0; i < kMaxRetries && !success; i++) {
-    success = mailbox.Receive(from, message);
+    success = mailbox.Receive(from, to, message);
   }
   return success;
 }
@@ -101,12 +103,13 @@ int ListMachines(Mailbox& mailbox, const Address server) {
 
   // Recieve Reply
   Address from;
+  Address to;
   std::string message;
-  if (!ReceiveMessage(mailbox, from, message)) {
+  if (!ReceiveMessage(mailbox, from, to, message)) {
     Error() << "Failed to receive \"list\" message: " << std::strerror(errno)
             << std::endl;
     return -1;
   }
-  Info() << "< " << from << ' ' << message << std::endl;
+  Info() << to << " < " << from << ' ' << message << std::endl;
   return 0;
 }

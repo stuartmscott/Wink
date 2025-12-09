@@ -1,4 +1,4 @@
-// Copyright 2022-2025 Stuart Scott
+// Copyright 2025 Stuart Scott
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
@@ -10,8 +10,9 @@
 #include <string>
 
 int main(int argc, char** argv) {
-  if (argc < 4) {
-    Error() << "Incorrect parameters, expected <name> <address> <parent>"
+  if (argc < 5) {
+    Error() << "Incorrect parameters, expected <name> <address> <parent> "
+               "<multicast>"
             << std::endl;
     return -1;
   }
@@ -21,6 +22,8 @@ int main(int argc, char** argv) {
   UDPSocket socket(address);
   AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
+  Address multicast(argv[4]);
+  socket.JoinGroup(multicast);
   Machine m(name, mailbox, address, parent);
 
   m.AddState(State(
@@ -29,16 +32,15 @@ int main(int argc, char** argv) {
       // Parent State
       "",
       // On Entry Action
-      []() { Info() << "main: OnEntry" << std::endl; },
+      [&]() { Info() << "main: OnEntry" << std::endl; },
       // On Exit Action
       []() { Info() << "main: OnExit" << std::endl; },
       // Receivers
       {
-          {"",
+          {"hello",
            [&](const Address& from, const Address& to, std::istream& args) {
-             std::ostringstream os;
-             os << args.rdbuf();
-             m.Send(from, os.str());
+             Info() << "Received hello multicast" << std::endl;
+             m.Exit();
            }},
       }));
 

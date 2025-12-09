@@ -49,6 +49,8 @@ class Address {
   std::string ToString() const;
   void ReadFrom(const struct sockaddr_in& address);
   void WriteTo(struct sockaddr_in& address) const;
+  uint32_t ToInetAddr() const;
+  bool IsMulticast() const;
 
   void set_ip(std::string ip) {
     ip_ = ip;

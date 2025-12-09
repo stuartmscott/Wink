@@ -2,6 +2,8 @@
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 #include <iostream>
@@ -17,8 +19,10 @@ int main(int argc, char** argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   std::set<Address> subscribers;
 
@@ -34,19 +38,19 @@ int main(int argc, char** argv) {
       // Receivers
       {
           {"subscribe",
-           [&](const Address& sender, std::istream& args) {
-             if (subscribers.insert(sender).second) {
-               Info() << "Publisher: subscribed: " << sender << std::endl;
+           [&](const Address& from, const Address& to, std::istream& args) {
+             if (subscribers.insert(from).second) {
+               Info() << "Publisher: subscribed: " << from << std::endl;
              }
            }},
           {"unsubscribe",
-           [&](const Address& sender, std::istream& args) {
-             if (subscribers.erase(sender)) {
-               Info() << "Publisher: unsubscribed: " << sender << std::endl;
+           [&](const Address& from, const Address& to, std::istream& args) {
+             if (subscribers.erase(from)) {
+               Info() << "Publisher: unsubscribed: " << from << std::endl;
              }
            }},
           {"publish",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              std::string payload;
              args >> payload;
              Info() << "Publisher: publish " << payload << std::endl;

@@ -82,7 +82,7 @@ void Machine::Start(const std::string& initial) {
     Send(server, "stop " + std::to_string(address.port()));
   }
 
-  while (!mailbox_->Flushed()) {
+  while (!mailbox_.Flushed()) {
   }
 }
 
@@ -151,7 +151,7 @@ void Machine::Transition(const std::string& state) {
 
 void Machine::Send(const Address& to, const std::string& message) {
   Info() << uid_ << " > " << to << ' ' << message << std::endl;
-  mailbox_->Send(to, message);
+  mailbox_.Send(to, message);
 }
 
 void Machine::SendAt(const Address& to, const std::string& message,
@@ -222,7 +222,7 @@ void Machine::CheckChildren(const std::chrono::system_clock::time_point now) {
         oss << "errored ";
         oss << v.first;
         oss << " heartbeat timeout";
-        HandleMessage(now, address, oss.str());
+        HandleMessage(now, address, address_, oss.str());
       }
 
       {
@@ -230,7 +230,7 @@ void Machine::CheckChildren(const std::chrono::system_clock::time_point now) {
         std::ostringstream oss;
         oss << "exited ";
         oss << v.first;
-        HandleMessage(now, address, oss.str());
+        HandleMessage(now, address, address_, oss.str());
       }
     }
   }
@@ -251,16 +251,18 @@ void Machine::SendScheduled(const std::chrono::system_clock::time_point now) {
 }
 
 void Machine::ReceiveMessage(const std::chrono::system_clock::time_point now) {
-  Address sender;
+  Address from;
+  Address to;
   std::string message;
-  if (mailbox_->Receive(sender, message)) {
-    HandleMessage(now, sender, message);
+  if (mailbox_.Receive(from, to, message)) {
+    HandleMessage(now, from, to, message);
   }
 }
 
 void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
-                            const Address& from, const std::string& message) {
-  Info() << uid_ << " < " << from << ' ' << message << std::endl;
+                            const Address& from, const Address& to,
+                            const std::string& message) {
+  Info() << uid_ << ' ' << to << " < " << from << ' ' << message << std::endl;
 
   std::istringstream iss(message);
   std::string t;
@@ -293,11 +295,11 @@ void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
     if (const auto it = states_.find(s); it != states_.end()) {
       const auto rs = it->second.receivers_;
       if (const auto i = rs.find(t); i != rs.end()) {
-        i->second(from, iss);
+        i->second(from, to, iss);
         return;
       } else if (const auto i = rs.find(""); i != rs.end()) {
         std::istringstream iss(message);
-        i->second(from, iss);
+        i->second(from, to, iss);
         return;
       } else {
         // Message not handled by state, try parent

@@ -22,6 +22,10 @@ A State Machine that sends all received messages to another State Machine.
 
 Demonstrates different tree shapes of Hierarchical State Machines;
 
+## [Multicast](multicast/README.md)
+
+Demonstrates how State Machines can communicate using UDP multicast, enabling one machine to send a single message that will be received by multiple others.
+
 ## [Network](network/README.md)
 
 Demonstrates how State Machines running in isolated Docker containers can communicate across a Docker network.

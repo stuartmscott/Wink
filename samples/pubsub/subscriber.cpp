@@ -2,6 +2,8 @@
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 #include <chrono>
@@ -19,8 +21,10 @@ int main(int argc, char** argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   Address publisher(argv[4]);
 
@@ -44,10 +48,10 @@ int main(int argc, char** argv) {
       // Receivers
       {
           {"update",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              std::string payload;
              args >> payload;
-             Info() << sender << " updated " << name << ": " << payload
+             Info() << from << " updated " << name << ": " << payload
                     << std::endl;
            }},
       }));

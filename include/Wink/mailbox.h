@@ -22,34 +22,37 @@ class Mailbox {
   Mailbox& operator=(const Mailbox&) = delete;
   Mailbox& operator=(Mailbox&&) = delete;
   virtual ~Mailbox() {}
-  virtual bool Receive(Address& from, std::string& message) = 0;
+  virtual bool Receive(Address& from, Address& to, std::string& message) = 0;
   virtual void Send(const Address& to, const std::string& message) = 0;
   virtual bool Flushed() = 0;
 };
 
 class AsyncMailbox : public Mailbox {
  public:
-  explicit AsyncMailbox(Socket* socket);
+  explicit AsyncMailbox(Socket& socket);
   AsyncMailbox(const AsyncMailbox&) = delete;
   AsyncMailbox(AsyncMailbox&&) = delete;
   AsyncMailbox& operator=(const AsyncMailbox&) = delete;
   AsyncMailbox& operator=(AsyncMailbox&&) = delete;
   ~AsyncMailbox();
-  bool Receive(Address& from, std::string& message) override;
+  bool Receive(Address& from, Address& to, std::string& message) override;
   void Send(const Address& to, const std::string& message) override;
   bool Flushed() override;
 
  private:
   void BackgroundReceive();
+  void BackgroundReceiveMulticast();
   void BackgroundSend();
+  void BackgroundSendMulticast();
   struct QueuedMessage {
     std::chrono::system_clock::time_point time;
     uint64_t seq_num;
     uint8_t attempts;
-    Address address;
+    Address from;
+    Address to;
     std::string message;
   };
-  Socket* socket_;
+  Socket& socket_;
   char receive_buffer_[kMaxUDPPayload];
   char send_buffer_[kMaxUDPPayload];
   std::mutex incoming_mutex_;
@@ -58,6 +61,7 @@ class AsyncMailbox : public Mailbox {
   std::condition_variable outgoing_condition_;
   std::deque<QueuedMessage> incoming_messages_;
   std::deque<QueuedMessage> outgoing_messages_;
+  std::deque<QueuedMessage> outgoing_multicasts_;
   std::map<const Address, uint64_t> incoming_seq_nums_;
   std::map<const Address, uint64_t> outgoing_seq_nums_;
   std::atomic_bool running_ = true;

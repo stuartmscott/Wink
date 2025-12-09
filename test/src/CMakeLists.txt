@@ -1,8 +1,7 @@
 ################################################################
 # Tests
 
-set(LIBRARY_NAME libWink)
-set(SERVER_LIBRARY_NAME libWinkServer)
+set(LIBRARY_NAME libWinkServer)
 
 set(TARGET_NAME WinkTests)
 
@@ -34,7 +33,6 @@ target_sources(${TARGET_NAME}
 target_link_libraries(${TARGET_NAME}
   PRIVATE
     ${LIBRARY_NAME}
-    ${SERVER_LIBRARY_NAME}
     gtest_main
 )
 

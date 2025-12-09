@@ -1,6 +1,8 @@
 // Copyright 2022-2025 Stuart Scott
 #include <Wink/address.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 #include <chrono>
@@ -18,8 +20,10 @@ int main(int argc, char** argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   const std::chrono::seconds interval(std::stoi(argv[4]));
 
@@ -46,7 +50,7 @@ int main(int argc, char** argv) {
       // Receivers
       {
           {"exit",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              running = false;
              worker.join();
            }},

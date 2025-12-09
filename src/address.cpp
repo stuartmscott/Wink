@@ -63,6 +63,23 @@ std::string Address::ToString() const {
   return oss.str();
 }
 
+uint32_t Address::ToInetAddr() const {
+  auto c = ip_.c_str();
+  if (!isdigit(c[0])) {
+    if (const auto record = gethostbyname(c); record) {
+      in_addr* ia = reinterpret_cast<in_addr*>(record->h_addr);
+      c = inet_ntoa(*ia);
+    }
+  }
+  return inet_addr(c);
+}
+
+bool Address::IsMulticast() const {
+  // InetAddr is in network byte order
+  unsigned char first_octet = ToInetAddr() & 0xFF;
+  return (first_octet >= 224 && first_octet <= 239);
+}
+
 void Address::ReadFrom(const struct sockaddr_in& address) {
   set_ip(inet_ntoa(address.sin_addr));
   set_port(ntohs(address.sin_port));
@@ -72,14 +89,7 @@ void Address::WriteTo(struct sockaddr_in& address) const {
   memset(&address, 0, sizeof(struct sockaddr_in));
   address.sin_family = AF_INET;
   if (!ip_.empty()) {
-    auto c = ip_.c_str();
-    if (!isdigit(c[0])) {
-      if (const auto record = gethostbyname(c); record) {
-        in_addr* ia = reinterpret_cast<in_addr*>(record->h_addr);
-        c = inet_ntoa(*ia);
-      }
-    }
-    address.sin_addr.s_addr = inet_addr(c);
+    address.sin_addr.s_addr = ToInetAddr();
   }
   address.sin_port = htons(port_);
 }

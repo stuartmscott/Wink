@@ -2,6 +2,8 @@
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 #include <iostream>
@@ -17,8 +19,10 @@ int main(int argc, char** argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
   Address destination(argv[4]);
 
@@ -34,7 +38,7 @@ int main(int argc, char** argv) {
       // Receivers
       {
           {"",
-           [&](const Address& sender, std::istream& args) {
+           [&](const Address& from, const Address& to, std::istream& args) {
              std::ostringstream os;
              os << args.rdbuf();
              m.Send(destination, os.str());

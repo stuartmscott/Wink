@@ -1,6 +1,8 @@
 // Copyright 2022-2025 Stuart Scott
 #include <Wink/address.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 
 #include <iostream>
@@ -15,10 +17,13 @@ int main(int argc, char** argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
 
-  auto goto_receiver = [&](const Address& sender, std::istream& args) {
+  auto goto_receiver = [&](const Address& from, const Address& to,
+                           std::istream& args) {
     std::string s;
     args >> s;
     m.Transition(s);

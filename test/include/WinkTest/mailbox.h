@@ -15,6 +15,8 @@ typedef bool ReceiveArgs;
 struct ReceiveResult {
   std::string fromIP;
   uint16_t fromPort;
+  std::string toIP;
+  uint16_t toPort;
   std::string message;
   bool result;
 };
@@ -33,7 +35,7 @@ class MockMailbox : public Mailbox {
   MockMailbox(const MockMailbox& s) = delete;
   MockMailbox(MockMailbox&& s) = delete;
   ~MockMailbox() {}
-  bool Receive(Address& from, std::string& message) override;
+  bool Receive(Address& from, Address& to, std::string& message) override;
   void Send(const Address& to, const std::string& message) override;
   bool Flushed() override { return flushed_; }
 

@@ -2,6 +2,8 @@
 #include <Wink/address.h>
 #include <Wink/log.h>
 #include <Wink/machine.h>
+#include <Wink/mailbox.h>
+#include <Wink/socket.h>
 #include <Wink/state.h>
 #include <tape.h>
 
@@ -23,10 +25,12 @@ int main(int argc, char** argv) {
 
   std::string name(argv[1]);
   Address address(argv[2]);
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
   Address parent(argv[3]);
   std::string quintuples(argv[5]);
 
-  Machine m(name, address, parent);
+  Machine m(name, mailbox, address, parent);
   Tape tape(argv[4][0]);
 
   Address requester;
@@ -63,7 +67,8 @@ int main(int argc, char** argv) {
     for (const auto& [r, w, d, n] : v) {
       receivers.emplace(
           std::string{r},
-          [&m, &tape, w, d, n](const Address& sender, std::istream& args) {
+          [&m, &tape, w, d, n](const Address& from, const Address& to,
+                               std::istream& args) {
             tape.Write(w);
             tape.Move(d);
             m.Transition(std::string{n});
@@ -98,9 +103,10 @@ int main(int argc, char** argv) {
       // On Exit Action
       []() { Info() << "Initial: OnExit" << std::endl; },
       // Receivers
-      {{"exit", [&](const Address& sender, std::istream& args) {}},
-       {"", [&](const Address& sender, std::istream& args) {
-          requester = sender;
+      {{"exit",
+        [&](const Address& from, const Address& to, std::istream& args) {}},
+       {"", [&](const Address& from, const Address& to, std::istream& args) {
+          requester = from;
           tape.Assign(args);
           m.Transition(std::string{first_state});
         }}}));

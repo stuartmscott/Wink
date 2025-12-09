@@ -144,7 +144,6 @@ target_sources(${SERVER_NAME}
 
 target_link_libraries(${SERVER_NAME}
   PRIVATE
-    ${LIBRARY_NAME}
     ${SERVER_LIBRARY_NAME}
 )
 

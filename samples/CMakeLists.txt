@@ -10,6 +10,8 @@ add_subdirectory("forward")
 
 add_subdirectory("hierarchy")
 
+add_subdirectory("multicast")
+
 # add_subdirectory("network")
 
 add_subdirectory("pubsub")

@@ -8,17 +8,19 @@
 #include <cstring>
 #include <string>
 
-AsyncMailbox::AsyncMailbox(Socket* socket)
+AsyncMailbox::AsyncMailbox(Socket& socket)
     : socket_(socket),
       running_(true),
       receiver_([&]() {
         while (running_) {
           BackgroundReceive();
+          BackgroundReceiveMulticast();
         }
       }),
       sender_([&]() {
         while (running_) {
           BackgroundSend();
+          BackgroundSendMulticast();
         }
       }) {}
 
@@ -28,10 +30,9 @@ AsyncMailbox::~AsyncMailbox() {
   running_ = false;
   receiver_.join();
   sender_.join();
-  delete socket_;
 }
 
-bool AsyncMailbox::Receive(Address& from, std::string& message) {
+bool AsyncMailbox::Receive(Address& from, Address& to, std::string& message) {
   std::unique_lock lock(incoming_mutex_);
   if (!incoming_condition_.wait_for(lock, kReceiveTimeout, [this] {
         return !incoming_messages_.empty();
@@ -40,36 +41,44 @@ bool AsyncMailbox::Receive(Address& from, std::string& message) {
   }
 
   const auto& in = incoming_messages_.front();
-  from = in.address;
+  from = in.from;
+  to = in.to;
   message = in.message;
   incoming_messages_.pop_front();
   return true;
 }
 
 void AsyncMailbox::Send(const Address& to, const std::string& message) {
-  uint64_t seq_num = 0;
-  if (const auto& it = outgoing_seq_nums_.find(to);
-      it != outgoing_seq_nums_.end()) {
-    seq_num = ++(it->second);
-  } else {
-    outgoing_seq_nums_[to] = 0;
-  }
   std::scoped_lock lock(outgoing_mutex_);
-  outgoing_messages_.emplace_back(std::chrono::system_clock::now(), seq_num, 0,
-                                  to, message);
+  if (to.IsMulticast()) {
+    outgoing_multicasts_.emplace_back(std::chrono::system_clock::now(), 0, 0,
+                                      Address(), to, message);
+  } else {
+    uint64_t seq_num = 0;
+    if (const auto& it = outgoing_seq_nums_.find(to);
+        it != outgoing_seq_nums_.end()) {
+      seq_num = ++(it->second);
+    } else {
+      outgoing_seq_nums_[to] = 0;
+    }
+    outgoing_messages_.emplace_back(std::chrono::system_clock::now(), seq_num,
+                                    0, Address(), to, message);
+  }
   outgoing_condition_.notify_all();
 }
 
 bool AsyncMailbox::Flushed() {
   std::unique_lock lock(outgoing_mutex_);
-  return outgoing_condition_.wait_for(
-      lock, kSendTimeout, [this] { return outgoing_messages_.empty(); });
+  return outgoing_condition_.wait_for(lock, kSendTimeout, [this] {
+    return outgoing_messages_.empty() && outgoing_multicasts_.empty();
+  });
 }
 
 void AsyncMailbox::BackgroundReceive() {
   Address from;
+  Address to;
   size_t length;
-  if (!socket_->Receive(from, receive_buffer_, length)) {
+  if (!socket_.Receive(from, to, receive_buffer_, length)) {
     return;
   }
   while (receive_buffer_[length - 1] == '\n') {
@@ -92,7 +101,7 @@ void AsyncMailbox::BackgroundReceive() {
     std::scoped_lock lock(outgoing_mutex_);
     for (auto it = outgoing_messages_.begin();
          it != outgoing_messages_.end();) {
-      if (it->address == from && it->seq_num == seq_num) {
+      if (it->to == from && it->seq_num == seq_num) {
         outgoing_messages_.erase(it);
         outgoing_condition_.notify_all();
         return;
@@ -109,7 +118,7 @@ void AsyncMailbox::BackgroundReceive() {
       receive_buffer_[8] = 'a';
       receive_buffer_[9] = 'c';
       receive_buffer_[10] = 'k';
-      if (!socket_->Send(from, receive_buffer_, sizeof(uint64_t) + 3)) {
+      if (!socket_.Send(from, receive_buffer_, sizeof(uint64_t) + 3)) {
         Error() << "Failed to acknowledge " << from << ": "
                 << std::strerror(errno) << std::endl;
       }
@@ -131,7 +140,23 @@ void AsyncMailbox::BackgroundReceive() {
 
     std::scoped_lock lock(incoming_mutex_);
     incoming_messages_.emplace_back(std::chrono::system_clock::now(), seq_num,
-                                    0, from, message);
+                                    0, from, to, message);
+    incoming_condition_.notify_all();
+  }
+}
+
+void AsyncMailbox::BackgroundReceiveMulticast() {
+  Address from;
+  Address to;
+  size_t length;
+  while (socket_.ReceiveMulticast(from, to, receive_buffer_, length)) {
+    while (receive_buffer_[length - 1] == '\n') {
+      --length;
+    }
+    std::string message(receive_buffer_, length);
+    std::scoped_lock lock(incoming_mutex_);
+    incoming_messages_.emplace_back(std::chrono::system_clock::now(), 0, 0,
+                                    from, to, message);
     incoming_condition_.notify_all();
   }
 }
@@ -147,7 +172,7 @@ void AsyncMailbox::BackgroundSend() {
   const auto now = std::chrono::system_clock::now();
   for (auto it = outgoing_messages_.begin(); it != outgoing_messages_.end();) {
     if (it->attempts >= kMaxRetries) {
-      Error() << "Failed to deliver to " << it->address << " failed after "
+      Error() << "Failed to deliver to " << it->to << " failed after "
               << std::to_string(it->attempts) << " attempts" << std::endl;
       it = outgoing_messages_.erase(it);
       continue;
@@ -162,13 +187,27 @@ void AsyncMailbox::BackgroundSend() {
           std::min(it->message.length(), kMaxUDPPayload - sizeof(uint64_t));
       std::memcpy(send_buffer_ + sizeof(uint64_t), it->message.c_str(), length);
       size_t bytes = length + sizeof(uint64_t);
-      if (!socket_->Send(it->address, send_buffer_, bytes)) {
-        Error() << "Failed to send " << bytes << " bytes to " << it->address
+      if (!socket_.Send(it->to, send_buffer_, bytes)) {
+        Error() << "Failed to unicast " << bytes << " bytes to " << it->to
                 << ": " << std::strerror(errno) << std::endl;
       }
 
       it->attempts++;
     }
     it++;
+  }
+}
+
+void AsyncMailbox::BackgroundSendMulticast() {
+  std::unique_lock lock(outgoing_mutex_);
+
+  for (auto it = outgoing_multicasts_.begin();
+       it != outgoing_multicasts_.end();) {
+    const auto bytes = it->message.length();
+    if (!socket_.Send(it->to, it->message.c_str(), bytes)) {
+      Error() << "Failed to multicast " << bytes << " bytes to " << it->to
+              << ": " << std::strerror(errno) << std::endl;
+    }
+    it = outgoing_multicasts_.erase(it);
   }
 }

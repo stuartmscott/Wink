@@ -12,24 +12,28 @@
 
 class MockSocket : public Socket {
  public:
-  bool Receive(Address&, char*, size_t&) override;
+  bool Receive(Address&, Address&, char*, size_t&) override;
+  bool ReceiveMulticast(Address&, Address&, char*, size_t&) override;
   bool Send(const Address&, const char*, const size_t) override;
-  void Push(const Address&, const char*, const size_t);
+  void Push(const Address&, const Address&, const char*, const size_t);
+  void PushMulticast(const Address&, const Address&, const char*, const size_t);
   bool Pop(Address&, char*, size_t&);
   void Await(Address&, char*, size_t&);
 
  private:
   std::mutex mutex_;
   struct Packet {
-    Address address;
+    Address from;
+    Address to;
     char buffer[kMaxTestPayload];
     size_t length;
-    Packet(const Address a, const char* b, const size_t l)
-        : address(), length(l) {
+    Packet(const Address f, const Address t, const char* b, const size_t l)
+        : from(f), to(t), length(l) {
       std::memcpy(buffer, b, l);
     }
   };
   std::deque<Packet> receive_queue_;
+  std::deque<Packet> receive_multicast_queue_;
   std::deque<Packet> send_queue_;
 };
 

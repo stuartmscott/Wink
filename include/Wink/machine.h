@@ -25,10 +25,7 @@ void SignalHandler(int signal);
 
 class Machine {
  public:
-  Machine(std::string name, Address& address, Address& parent)
-      : Machine(name, new AsyncMailbox(new UDPSocket(address)), address,
-                parent) {}
-  Machine(std::string name, Mailbox* mailbox, Address& address, Address& parent)
+  Machine(std::string name, Mailbox& mailbox, Address& address, Address& parent)
       : name_(name), mailbox_(mailbox), address_(address), parent_(parent) {
     std::signal(SIGTERM, SignalHandler);
   }
@@ -36,7 +33,7 @@ class Machine {
   Machine(Machine&& m) = delete;
   Machine& operator=(const Machine& m) = delete;
   Machine& operator=(Machine&& m) = delete;
-  ~Machine() { delete mailbox_; }
+  ~Machine() {}
   /**
    * Returns this Machine's Unique Identifier.
    */
@@ -108,13 +105,14 @@ class Machine {
   void SendScheduled(const std::chrono::system_clock::time_point now);
   void ReceiveMessage(const std::chrono::system_clock::time_point now);
   void HandleMessage(const std::chrono::system_clock::time_point now,
-                     const Address& from, const std::string& message);
+                     const Address& from, const Address& to,
+                     const std::string& message);
   void RegisterMachine(const std::string& machine, const int pid);
   void UnregisterMachine();
   std::vector<std::string> StateLineage(const std::string& state);
 
   std::string name_ = "";
-  Mailbox* mailbox_;
+  Mailbox& mailbox_;
   Address& address_;
   Address& parent_;
   std::string uid_ = "";
