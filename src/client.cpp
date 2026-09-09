@@ -4,11 +4,13 @@
 #include <string>
 #include <vector>
 
+namespace Wink {
+
 int StartMachine(Mailbox& mailbox, const Address address,
                  const std::string machine, Address& destination,
                  const std::vector<std::string> args, const bool follow) {
   // Send Request
-  Address server(destination.ip(), kServerPort);
+  Address server(destination.ip(), ServerPort);
   std::ostringstream oss;
   oss << "start ";
   oss << machine;
@@ -18,7 +20,7 @@ int StartMachine(Mailbox& mailbox, const Address address,
     oss << ' ';
     oss << a;
   }
-  const auto request = oss.str();
+  const auto request{oss.str()};
   SendMessage(mailbox, server, request);
 
   // Recieve Reply
@@ -38,12 +40,12 @@ int StartMachine(Mailbox& mailbox, const Address address,
             << "Got: \"" << command << '"' << std::endl;
     return -1;
   }
-  auto name_req = ParseMachineName(machine);
-  auto bin_req = get<0>(name_req);
+  auto name_req{ParseMachineName(machine)};
+  auto bin_req{get<0>(name_req)};
   std::string n;
   iss >> n;
-  auto name_res = ParseMachineName(n);
-  auto bin_res = get<0>(name_req);
+  auto name_res{ParseMachineName(n)};
+  auto bin_res{get<0>(name_req)};
   if (bin_res != bin_req) {
     Error() << "Incorrect machine binary started. Expected: \"" << bin_req
             << "\", Got: \"" << bin_res << '"' << std::endl;
@@ -67,7 +69,7 @@ int StartMachine(Mailbox& mailbox, const Address address,
 }
 
 int StopMachine(Mailbox& mailbox, const Address address) {
-  Address server(address.ip(), kServerPort);
+  Address server(address.ip(), ServerPort);
   std::ostringstream oss;
   oss << "stop ";
   oss << address.port();
@@ -90,8 +92,8 @@ void SendMessages(Mailbox& mailbox, const Address to,
 
 bool ReceiveMessage(Mailbox& mailbox, Address& from, Address& to,
                     std::string& message) {
-  bool success = false;
-  for (uint8_t i = 0; i < kMaxRetries && !success; i++) {
+  bool success{false};
+  for (uint8_t i{0}; i < MaxRetries && !success; ++i) {
     success = mailbox.Receive(from, to, message);
   }
   return success;
@@ -113,3 +115,5 @@ int ListMachines(Mailbox& mailbox, const Address server) {
   Info() << to << " < " << from << ' ' << message << std::endl;
   return 0;
 }
+
+};  // namespace Wink

@@ -6,25 +6,27 @@
 
 #include <string>
 
+namespace Wink::Test {
+
 // Constants for Testing
 
-constexpr size_t kMaxTestPayload(20);
-constexpr uint16_t kTestPort(42424);
-constexpr pid_t kTestPID(2424);
+constexpr size_t MaxTestPayload{20};
+constexpr uint16_t TestPort{42424};
+constexpr pid_t TestPID{2424};
 
-constexpr std::string kTestUnicastIP("12.34.56.78");
-constexpr std::string kTestMulticastIP("232.34.56.78");
-constexpr std::string kTestBinary("wink.bin");
-constexpr std::string kTestMessage("test 1234");
+constexpr std::string TestUnicastIP{"12.34.56.78"};
+constexpr std::string TestMulticastIP{"232.34.56.78"};
+constexpr std::string TestBinary{"wink.bin"};
+constexpr std::string TestMessage{"test 1234"};
 
-constexpr char kTestPacket[] = {'\0', '\0', '\0', '\0', '\0', '\0',
-                                '\0', '\0', 't',  'e',  's',  't',
-                                ' ',  '1',  '2',  '3',  '4'};
-constexpr char kTestAck[] = {'\0', '\0', '\0', '\0', '\0', '\0',
-                             '\0', '\0', 'a',  'c',  'k'};
+constexpr char TestPacket[]{'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', 't',
+                            'e',  's',  't',  ' ',  '1',  '2',  '3',  '4'};
+constexpr char TestAck[]{'\0', '\0', '\0', '\0', '\0', '\0',
+                         '\0', '\0', 'a',  'c',  'k'};
 
-constexpr size_t kTestPacketLength(sizeof(kTestPacket) /
-                                   sizeof(kTestPacket[0]));
-constexpr size_t kTestAckLength(sizeof(kTestAck) / sizeof(kTestAck[0]));
+constexpr size_t TestPacketLength{sizeof(TestPacket) / sizeof(TestPacket[0])};
+constexpr size_t TestAckLength{sizeof(TestAck) / sizeof(TestAck[0])};
+
+};  // namespace Wink::Test
 
 #endif  // TEST_INCLUDE_WINKTEST_CONSTANTS_H_

@@ -6,9 +6,13 @@
 #include <iostream>
 #include <string>
 
+namespace Wink {
+
 std::ostream& Error();
 std::ostream& Info();
 
 int LogToFile(const std::string& directory, const std::string& name);
+
+};  // namespace Wink
 
 #endif  // INCLUDE_WINK_LOG_H_

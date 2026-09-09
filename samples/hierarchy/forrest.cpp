@@ -8,6 +8,8 @@
 #include <iostream>
 #include <string>
 
+using namespace Wink;
+
 int main(int argc, char** argv) {
   if (argc < 4) {
     Error() << "Incorrect parameters, expected <name> <address> <parent>"
@@ -22,12 +24,12 @@ int main(int argc, char** argv) {
   Address parent(argv[3]);
   Machine m(name, mailbox, address, parent);
 
-  auto goto_receiver = [&](const Address& from, const Address& to,
-                           std::istream& args) {
-    std::string s;
-    args >> s;
-    m.Transition(s);
-  };
+  auto goto_receiver{
+      [&](const Address& from, const Address& to, std::istream& args) {
+        std::string s;
+        args >> s;
+        m.Transition(s);
+      }};
 
   m.AddState(State(
       // State Name

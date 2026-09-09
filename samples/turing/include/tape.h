@@ -17,7 +17,7 @@ class Tape {
   void Move(char);
 
  private:
-  const char blank_ = '_';
+  const char blank_{'_'};
   std::vector<char> cells_;
   std::vector<char>::iterator pos_;
 };

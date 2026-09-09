@@ -5,6 +5,8 @@
 #include <utility>
 #include <vector>
 
+namespace Wink {
+
 void SignalHandler(int signal) {
   if (signal == SIGTERM) {
     got_sigterm = true;
@@ -27,7 +29,7 @@ void Machine::Start(const std::string& initial) {
   RegisterMachine(name_, getpid());
 
   if (!states_.empty()) {
-    std::string state = current_;
+    std::string state{current_};
     if (!initial.empty()) {
       state = initial;
     }
@@ -35,22 +37,22 @@ void Machine::Start(const std::string& initial) {
     Transition(state);
 
     // Loop receiving messages
-    auto last = std::chrono::system_clock::now();
+    auto last{std::chrono::system_clock::now()};
     while (running_ && !got_sigterm) {
-      const auto now = std::chrono::system_clock::now();
+      const auto now{std::chrono::system_clock::now()};
       CheckChildren(now);  // Check every loop
-      if (now - last > kPulseInterval) {
-        SendPulse();  // Send every kPulseInterval
+      if (now - last > PulseInterval) {
+        SendPulse();  // Send every PulseInterval
         last = now;
       }
       SendScheduled(now);   // Send any scheduled messages
-      ReceiveMessage(now);  // Waits up to kReceiveTimeout for message
+      ReceiveMessage(now);  // Waits up to ReceiveTimeout for message
     }
 
     // Exit current state
-    std::string s = current_;
+    std::string s{current_};
     while (!s.empty()) {
-      auto& state = states_.at(s);
+      auto& state{states_.at(s)};
       state.on_exit_();
       s = state.parent_;
     }
@@ -78,7 +80,7 @@ void Machine::Start(const std::string& initial) {
     Address address;
     std::istringstream iss(k);
     iss >> address;
-    Address server(address.ip(), kServerPort);
+    Address server(address.ip(), ServerPort);
     Send(server, "stop " + std::to_string(address.port()));
   }
 
@@ -101,7 +103,7 @@ void Machine::Error(const std::string& message) {
 }
 
 void Machine::AddState(State state) {
-  const auto n = state.name_;
+  const auto n{state.name_};
   if (current_.empty()) {
     current_ = n;
   }
@@ -161,7 +163,7 @@ void Machine::SendAt(const Address& to, const std::string& message,
 
 void Machine::SendAfter(const Address& to, const std::string& message,
                         const std::chrono::seconds delay) {
-  auto time = std::chrono::system_clock::now();
+  auto time{std::chrono::system_clock::now()};
   time += delay;
   SendAt(to, message, time);
 }
@@ -185,7 +187,7 @@ void Machine::Spawn(const std::string& machine, const Address& destination) {
 void Machine::Spawn(const std::string& machine, const Address& destination,
                     const std::vector<std::string>& args) {
   // Send Request
-  Address server(destination.ip(), kServerPort);
+  Address server(destination.ip(), ServerPort);
   std::ostringstream oss;
   oss << "start ";
   oss << machine;
@@ -195,22 +197,22 @@ void Machine::Spawn(const std::string& machine, const Address& destination,
     oss << ' ';
     oss << a;
   }
-  const auto s = oss.str();
+  const auto s{oss.str()};
   Send(server, s);
 }
 
 void Machine::CheckChildren(const std::chrono::system_clock::time_point now) {
   std::vector<std::string> dead;
   for (const auto& [k, v] : spawned_) {
-    if (const auto d = now - v.second; d > kHeartbeatTimeout) {
+    if (const auto d{now - v.second}; d > HeartbeatTimeout) {
       dead.push_back(k);
     }
   }
 
   for (const auto& c : dead) {
-    if (const auto& it = spawned_.find(c); it != spawned_.end()) {
-      const auto k = it->first;
-      const auto v = it->second;
+    if (const auto& it{spawned_.find(c)}; it != spawned_.end()) {
+      const auto k{it->first};
+      const auto v{it->second};
 
       Address address;
       std::istringstream iss(k);
@@ -271,7 +273,7 @@ void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
   // Supervision
   std::ostringstream oss;
   oss << from;
-  const auto key = oss.str();
+  const auto key{oss.str()};
   if (t == "exit") {
     Exit();
   } else if (t == "started") {
@@ -284,20 +286,20 @@ void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
   } else if (t == "exited") {
     spawned_.erase(key);
   } else if (t == "pulsed") {
-    if (auto it = spawned_.find(key); it != spawned_.end()) {
+    if (auto it{spawned_.find(key)}; it != spawned_.end()) {
       it->second.second = now;
     }
   }
 
   // Receivers
-  auto s = current_;
+  auto s{current_};
   while (!s.empty()) {
-    if (const auto it = states_.find(s); it != states_.end()) {
-      const auto rs = it->second.receivers_;
-      if (const auto i = rs.find(t); i != rs.end()) {
+    if (const auto it{states_.find(s)}; it != states_.end()) {
+      const auto rs{it->second.receivers_};
+      if (const auto i{rs.find(t)}; i != rs.end()) {
         i->second(from, to, iss);
         return;
-      } else if (const auto i = rs.find(""); i != rs.end()) {
+      } else if (const auto i{rs.find("")}; i != rs.end()) {
         std::istringstream iss(message);
         i->second(from, to, iss);
         return;
@@ -306,14 +308,14 @@ void Machine::HandleMessage(const std::chrono::system_clock::time_point now,
         s = it->second.parent_;
       }
     } else {
-      ::Error() << uid_ << ": No such state: " << s << std::endl;
+      Wink::Error() << uid_ << ": No such state: " << s << std::endl;
       Error("Unrecognized state: " + s);
     }
   }
   if (t != "exit") {
     // Message not handled by hierarchy
-    ::Error() << uid_ << ": Failed to handle message: \"" << t << "\""
-              << std::endl;
+    Wink::Error() << uid_ << ": Failed to handle message: \"" << t << "\""
+                  << std::endl;
     Error("Unhandled message: " + t);
   }
 }
@@ -324,12 +326,12 @@ void Machine::RegisterMachine(const std::string& machine, const int pid) {
   oss << machine;
   oss << ' ';
   oss << pid;
-  Address server(address_.ip(), kServerPort);
+  Address server(address_.ip(), ServerPort);
   Send(server, oss.str());
 }
 
 void Machine::UnregisterMachine() {
-  Address server(address_.ip(), kServerPort);
+  Address server(address_.ip(), ServerPort);
   Send(server, "unregister");
 }
 
@@ -347,8 +349,8 @@ void PruneLineage(std::vector<std::string>& a, std::vector<std::string>& b) {
   // Vectors contain lineage from root to leaf.
 
   // Remove ancestors common to both lineages.
-  auto a_it = a.begin();
-  auto b_it = b.begin();
+  auto a_it{a.begin()};
+  auto b_it{b.begin()};
   while (a_it != a.end() && b_it != b.end()) {
     if (*a_it == *b_it) {
       a_it = a.erase(a_it);
@@ -361,11 +363,13 @@ void PruneLineage(std::vector<std::string>& a, std::vector<std::string>& b) {
 
 // Parse machine name into binary (directory/file), and optional tag.
 std::pair<std::string, std::string> ParseMachineName(const std::string& name) {
-  std::string binary = name;
+  std::string binary{name};
   std::string tag;
-  if (const auto i = name.find('#'); i != std::string::npos) {
+  if (const auto i{name.find('#')}; i != std::string::npos) {
     binary = name.substr(0, i);
     tag = name.substr(i + 1);
   }
   return {binary, tag};
 }
+
+};  // namespace Wink

@@ -11,6 +11,8 @@
 #include <sstream>
 #include <string>
 
+namespace Wink {
+
 std::ostream& Error() {
   std::cerr << "Error: ";
   return std::cerr;
@@ -24,17 +26,17 @@ Configure info and error logging output to directory.
 int LogToFile(const std::string& directory, const std::string& name) {
   struct stat st = {0};
 
-  if (const auto d = directory.c_str(); stat(d, &st) == -1) {
-    if (const auto result = mkdir(d, 0777); result < 0) {
+  if (const auto d{directory.c_str()}; stat(d, &st) == -1) {
+    if (const auto result{mkdir(d, 0777)}; result < 0) {
       Error() << "Failed to make log directory: " << directory << ": "
               << std::strerror(errno) << std::endl;
       return -1;
     }
   }
 
-  const auto now = std::chrono::system_clock::now();
-  const auto tt = std::chrono::system_clock::to_time_t(now);
-  const auto tm = *std::gmtime(&tt);
+  const auto now{std::chrono::system_clock::now()};
+  const auto tt{std::chrono::system_clock::to_time_t(now)};
+  const auto tm{*std::gmtime(&tt)};
 
   std::ostringstream filename;
   filename << std::put_time(&tm, "%Y%m%d%H%M%S");
@@ -45,20 +47,20 @@ int LogToFile(const std::string& directory, const std::string& name) {
 
   Info() << "Log: " << filepath.string() << std::endl;
 
-  int fd = open(filepath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+  int fd{open(filepath.c_str(), O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)};
   if (fd < 0) {
     Error() << "Failed to open file: " << filepath << ": "
             << std::strerror(errno) << std::endl;
     return -1;
   }
 
-  if (const auto result = dup2(fd, 1); result < 0) {
+  if (const auto result{dup2(fd, 1)}; result < 0) {
     Error() << "Failed to redirect std::cout output to log file" << std::endl;
     close(fd);
     return -1;
   }
 
-  if (const auto result = dup2(fd, 2); result < 0) {
+  if (const auto result{dup2(fd, 2)}; result < 0) {
     Error() << "Failed to redirect std::cerr output to log file" << std::endl;
     close(fd);
     return -1;
@@ -66,3 +68,5 @@ int LogToFile(const std::string& directory, const std::string& name) {
 
   return close(fd);
 }
+
+};  // namespace Wink

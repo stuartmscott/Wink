@@ -4,10 +4,12 @@
 #include <string>
 #include <vector>
 
+namespace Wink::Server {
+
 int Server::Serve(const std::string& directory) {
   running_ = true;
   if (!log_.empty()) {
-    if (const auto result = LogToFile(log_, "server"); result < 0) {
+    if (const auto result{LogToFile(log_, "server")}; result < 0) {
       Error() << "Failed to setup logging" << std::endl;
       return -1;
     }
@@ -42,7 +44,7 @@ int Server::Serve(const std::string& directory) {
 
       // TODO handle in worker threat
       {
-        if (const auto port = destination.port(); port > 0) {
+        if (const auto port{destination.port()}; port > 0) {
           // Stop existing machine on requested port (if any).
           Stop(port);
         }
@@ -77,7 +79,7 @@ int Server::Serve(const std::string& directory) {
           parameters.push_back(parameter);
         }
 
-        if (const auto result = Start(filepath.string(), parameters);
+        if (const auto result{Start(filepath.string(), parameters)};
             result < 0) {
           Error() << "Failed to start process" << std::endl;
           return result;
@@ -89,7 +91,7 @@ int Server::Serve(const std::string& directory) {
 
       // TODO handle in worker threat
       {
-        if (const auto result = Stop(port); result < 0) {
+        if (const auto result{Stop(port)}; result < 0) {
           Error() << "Failed to stop process" << std::endl;
           return result;
         }
@@ -107,7 +109,7 @@ int Server::Serve(const std::string& directory) {
     } else if (command == "unregister") {
       // TODO secure with mutex
       {
-        if (const auto it = pids_.find(from.port()); it != pids_.end()) {
+        if (const auto it{pids_.find(from.port())}; it != pids_.end()) {
           // remove port from machines and pids maps
           machines_.erase(from.port());
           pids_.erase(from.port());
@@ -146,37 +148,37 @@ pid_t Server::Start(const std::string& binary,
         std::string s(parameters.at(0));
         std::replace(s.begin(), s.end(), '/', '_');
         std::replace(s.begin(), s.end(), '#', '_');
-        if (const auto result = LogToFile(log_, s); result < 0) {
+        if (const auto result{LogToFile(log_, s)}; result < 0) {
           Error() << "Failed to setup logging" << std::endl;
           return -1;
         }
       }
 
-      const auto length = parameters.size() + 2;
+      const auto length{parameters.size() + 2};
       Info() << "Allocating char*[" << length << ']' << std::endl;
-      const auto args = new char*[length];
+      const auto args{new char*[length]};
 
       // Binary name
       {
-        auto b = binary.c_str();
-        auto l = binary.length() + 1;
+        auto b{binary.c_str()};
+        auto l{binary.length() + 1};
         Info() << "Allocating char[" << l << "] for " << binary << std::endl;
-        auto a = new char[l];
+        auto a{new char[l]};
         strncpy(a, b, l);
         args[0] = a;
       }
 
       // Parameters
       {
-        uint32_t i = 1;
+        uint32_t i{1};
         for (const auto& p : parameters) {
-          const auto l = p.length() + 1;
-          const auto c = p.c_str();
+          const auto l{p.length() + 1};
+          const auto c{p.c_str()};
           Info() << "Allocating char[" << l << "] for " << p << std::endl;
-          auto a = new char[l];
+          auto a{new char[l]};
           strncpy(a, c, l);
           args[i] = a;
-          i++;
+          ++i;
         }
       }
 
@@ -185,7 +187,7 @@ pid_t Server::Start(const std::string& binary,
         args[length - 1] = NULL;
       }
 
-      const auto result = execv(binary.c_str(), args);
+      const auto result{execv(binary.c_str(), args)};
 
       if (result < 0) {
         Error() << "Failed to execute binary: " << parameters.at(0) << ": "
@@ -202,13 +204,13 @@ pid_t Server::Start(const std::string& binary,
 }
 
 pid_t Server::Stop(uint16_t port) {
-  int pid = 0;
-  if (const auto it = pids_.find(port); it != pids_.end()) {
+  int pid{0};
+  if (const auto it{pids_.find(port)}; it != pids_.end()) {
     pid = it->second;
   }
   if (pid > 0) {
     Info() << "Killing: " << port << " : " << pid << std::endl;
-    if (const auto result = kill(pid, SIGTERM); result < 0) {
+    if (const auto result{kill(pid, SIGTERM)}; result < 0) {
       return result;
     }
     // remove port from machines and pids maps
@@ -226,3 +228,5 @@ std::string Server::List() {
   }
   return oss.str();
 }
+
+};  // namespace Wink::Server

@@ -13,6 +13,8 @@
 #include <tuple>
 #include <vector>
 
+using namespace Wink;
+
 typedef std::tuple<char, char, char, char> quadruple;
 
 int main(int argc, char** argv) {
@@ -41,12 +43,12 @@ int main(int argc, char** argv) {
   std::string token;
   std::istringstream iss(quintuples);
   while (std::getline(iss, token, ';')) {
-    char current = token[0];
-    char read = token[1];
-    char write = token[2];
-    char move = token[3];
-    char next = token[4];
-    const auto& it = states.find(current);
+    char current{token[0]};
+    char read{token[1]};
+    char write{token[2]};
+    char move{token[3]};
+    char next{token[4]};
+    const auto& it{states.find(current)};
     if (it == states.end()) {
       states.emplace(current,
                      std::vector<quadruple>{{read, write, move, next}});
@@ -55,7 +57,7 @@ int main(int argc, char** argv) {
     }
   }
 
-  char first_state = 0;
+  char first_state{0};
 
   // Iterate map, adding states to machine
   for (const auto& [k, v] : states) {

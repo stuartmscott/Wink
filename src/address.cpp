@@ -5,6 +5,8 @@
 #include <cstring>
 #include <string>
 
+namespace Wink {
+
 std::string Resolve(const std::string ip) {
   if (ip.empty() || isdigit(ip[0])) {
     // Nothing to do
@@ -12,13 +14,13 @@ std::string Resolve(const std::string ip) {
   }
 
   std::string resolved(ip);
-  auto c = ip.c_str();
+  auto c{ip.c_str()};
   struct addrinfo hints, *result, *rp;
   memset(&hints, 0, sizeof(hints));
   hints.ai_family = AF_INET;
   hints.ai_socktype = SOCK_DGRAM;
 
-  if (int status = getaddrinfo(c, NULL, &hints, &result); status != 0) {
+  if (int status{getaddrinfo(c, NULL, &hints, &result)}; status != 0) {
     Error() << "Failed to get address info: " << gai_strerror(status)
             << std::endl;
   } else {
@@ -38,14 +40,14 @@ std::string Resolve(const std::string ip) {
 }
 
 void Address::FromString(const std::string& address) {
-  const auto index = address.find(':');
+  const auto index{address.find(':')};
   switch (index) {
     case std::string::npos:
       set_ip(address);
       set_port(0);
       break;
     case 0:
-      set_ip(kLocalhost);
+      set_ip(Localhost);
       set_port(std::stoul(address.substr(index + 1)));
       break;
     default:
@@ -64,10 +66,10 @@ std::string Address::ToString() const {
 }
 
 uint32_t Address::ToInetAddr() const {
-  auto c = ip_.c_str();
+  auto c{ip_.c_str()};
   if (!isdigit(c[0])) {
-    if (const auto record = gethostbyname(c); record) {
-      in_addr* ia = reinterpret_cast<in_addr*>(record->h_addr);
+    if (const auto record{gethostbyname(c)}; record) {
+      in_addr* ia{reinterpret_cast<in_addr*>(record->h_addr)};
       c = inet_ntoa(*ia);
     }
   }
@@ -76,7 +78,7 @@ uint32_t Address::ToInetAddr() const {
 
 bool Address::IsMulticast() const {
   // InetAddr is in network byte order
-  unsigned char first_octet = ToInetAddr() & 0xFF;
+  auto first_octet{static_cast<unsigned char>(ToInetAddr() & 0xFF)};
   return (first_octet >= 224 && first_octet <= 239);
 }
 
@@ -105,3 +107,5 @@ std::ostream& operator<<(std::ostream& os, const Address& address) {
   os << address.ip() << ':' << address.port();
   return os;
 }
+
+};  // namespace Wink

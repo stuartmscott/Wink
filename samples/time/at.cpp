@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 
+using namespace Wink;
+
 int main(int argc, char** argv) {
   if (argc < 4) {
     Error() << "Incorrect parameters, expected <name> <address> <parent>"
@@ -32,8 +34,8 @@ int main(int argc, char** argv) {
       [&]() {
         Info() << "main: OnEntry" << std::endl;
         // Schedule message to be sent to self at the start of the next minute
-        const auto now = std::chrono::system_clock::now();
-        const auto time = std::chrono::ceil<std::chrono::minutes>(now);
+        const auto now{std::chrono::system_clock::now()};
+        const auto time{std::chrono::ceil<std::chrono::minutes>(now)};
         m.SendAt(address, "exit", time);
       },
       // On Exit Action

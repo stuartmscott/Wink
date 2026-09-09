@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 
+using namespace Wink;
+
 int main(int argc, char** argv) {
   if (argc < 4) {
     Error() << "Incorrect parameters, expected <name> <address> <parent>"
@@ -60,7 +62,7 @@ int main(int argc, char** argv) {
       {
           {"stop",
            [&](const Address& from, const Address& to, std::istream& args) {
-             const auto now = std::chrono::system_clock::now();
+             const auto now{std::chrono::system_clock::now()};
              const auto delta =
                  std::chrono::floor<std::chrono::seconds>(now - start).count();
              std::ostringstream oss;

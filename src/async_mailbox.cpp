@@ -8,6 +8,8 @@
 #include <cstring>
 #include <string>
 
+namespace Wink {
+
 AsyncMailbox::AsyncMailbox(Socket& socket)
     : socket_(socket),
       running_(true),
@@ -34,13 +36,13 @@ AsyncMailbox::~AsyncMailbox() {
 
 bool AsyncMailbox::Receive(Address& from, Address& to, std::string& message) {
   std::unique_lock lock(incoming_mutex_);
-  if (!incoming_condition_.wait_for(lock, kReceiveTimeout, [this] {
+  if (!incoming_condition_.wait_for(lock, ReceiveTimeout, [this] {
         return !incoming_messages_.empty();
       })) {
     return false;
   }
 
-  const auto& in = incoming_messages_.front();
+  const auto& in{incoming_messages_.front()};
   from = in.from;
   to = in.to;
   message = in.message;
@@ -54,8 +56,8 @@ void AsyncMailbox::Send(const Address& to, const std::string& message) {
     outgoing_multicasts_.emplace_back(std::chrono::system_clock::now(), 0, 0,
                                       Address(), to, message);
   } else {
-    uint64_t seq_num = 0;
-    if (const auto& it = outgoing_seq_nums_.find(to);
+    uint64_t seq_num{0};
+    if (const auto& it{outgoing_seq_nums_.find(to)};
         it != outgoing_seq_nums_.end()) {
       seq_num = ++(it->second);
     } else {
@@ -69,7 +71,7 @@ void AsyncMailbox::Send(const Address& to, const std::string& message) {
 
 bool AsyncMailbox::Flushed() {
   std::unique_lock lock(outgoing_mutex_);
-  return outgoing_condition_.wait_for(lock, kSendTimeout, [this] {
+  return outgoing_condition_.wait_for(lock, SendTimeout, [this] {
     return outgoing_messages_.empty() && outgoing_multicasts_.empty();
   });
 }
@@ -99,14 +101,13 @@ void AsyncMailbox::BackgroundReceive() {
   if (message == "ack") {
     // Remove associated message from outgoing_messages_
     std::scoped_lock lock(outgoing_mutex_);
-    for (auto it = outgoing_messages_.begin();
-         it != outgoing_messages_.end();) {
+    for (auto it{outgoing_messages_.begin()}; it != outgoing_messages_.end();) {
       if (it->to == from && it->seq_num == seq_num) {
         outgoing_messages_.erase(it);
         outgoing_condition_.notify_all();
         return;
       } else {
-        it++;
+        ++it;
       }
     }
     Error() << "Failed to find acknowledged message: " << from << ": "
@@ -124,7 +125,7 @@ void AsyncMailbox::BackgroundReceive() {
       }
     }
 
-    if (const auto& it = incoming_seq_nums_.find(from);
+    if (const auto& it{incoming_seq_nums_.find(from)};
         it != incoming_seq_nums_.end()) {
       if (seq_num <= it->second) {
         Info() << "Dropping duplicate message: " << from << ": " << seq_num
@@ -165,45 +166,45 @@ void AsyncMailbox::BackgroundSend() {
   std::unique_lock lock(outgoing_mutex_);
 
   if (!outgoing_condition_.wait_for(
-          lock, kSendTimeout, [this] { return !outgoing_messages_.empty(); })) {
+          lock, SendTimeout, [this] { return !outgoing_messages_.empty(); })) {
     return;
   }
 
-  const auto now = std::chrono::system_clock::now();
-  for (auto it = outgoing_messages_.begin(); it != outgoing_messages_.end();) {
-    if (it->attempts >= kMaxRetries) {
+  const auto now{std::chrono::system_clock::now()};
+  for (auto it{outgoing_messages_.begin()}; it != outgoing_messages_.end();) {
+    if (it->attempts >= MaxRetries) {
       Error() << "Failed to deliver to " << it->to << " failed after "
               << std::to_string(it->attempts) << " attempts" << std::endl;
       it = outgoing_messages_.erase(it);
       continue;
     }
 
-    const auto deadline = it->time + it->attempts * kReceiveTimeout;
+    const auto deadline{it->time + it->attempts * ReceiveTimeout};
     if (now >= deadline) {
       // TODO move out of outgoing_mutex_ lock
-      uint64_t seq_num = it->seq_num;
+      uint64_t seq_num{it->seq_num};
       std::memcpy(send_buffer_, &seq_num, sizeof(uint64_t));
       const auto length =
-          std::min(it->message.length(), kMaxUDPPayload - sizeof(uint64_t));
+          std::min(it->message.length(), MaxUDPPayload - sizeof(uint64_t));
       std::memcpy(send_buffer_ + sizeof(uint64_t), it->message.c_str(), length);
-      size_t bytes = length + sizeof(uint64_t);
+      size_t bytes{length + sizeof(uint64_t)};
       if (!socket_.Send(it->to, send_buffer_, bytes)) {
         Error() << "Failed to unicast " << bytes << " bytes to " << it->to
                 << ": " << std::strerror(errno) << std::endl;
       }
 
-      it->attempts++;
+      ++(it->attempts);
     }
-    it++;
+    ++it;
   }
 }
 
 void AsyncMailbox::BackgroundSendMulticast() {
   std::unique_lock lock(outgoing_mutex_);
 
-  for (auto it = outgoing_multicasts_.begin();
+  for (auto it{outgoing_multicasts_.begin()};
        it != outgoing_multicasts_.end();) {
-    const auto bytes = it->message.length();
+    const auto bytes{it->message.length()};
     if (!socket_.Send(it->to, it->message.c_str(), bytes)) {
       Error() << "Failed to multicast " << bytes << " bytes to " << it->to
               << ": " << std::strerror(errno) << std::endl;
@@ -211,3 +212,5 @@ void AsyncMailbox::BackgroundSendMulticast() {
     it = outgoing_multicasts_.erase(it);
   }
 }
+
+};  // namespace Wink

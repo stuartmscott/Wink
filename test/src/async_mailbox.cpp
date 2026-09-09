@@ -8,8 +8,10 @@
 
 #include <string>
 
+namespace Wink::Test {
+
 TEST(AsyncMailboxTest, Timeout) {
-  Address address(kLocalhost, 0);
+  Address address(Localhost, 0);
   UDPSocket socket(address);
   AsyncMailbox mailbox(socket);
 
@@ -20,17 +22,15 @@ TEST(AsyncMailboxTest, Timeout) {
 }
 
 TEST(AsyncMailboxTest, UnicastDelivery_Thread) {
-  Address receiver_address(kLocalhost, 0);
+  Address receiver_address(Localhost, 0);
   UDPSocket receiver_socket(receiver_address);
   AsyncMailbox receiver_mailbox(receiver_socket);
 
   std::thread worker{[receiver_address] {
-    // Thread sends message after delay
-    sleep(1);
-    Address sender_address(kLocalhost, 0);
+    Address sender_address(Localhost, 0);
     UDPSocket sender_socket(sender_address);
     AsyncMailbox sender_mailbox(sender_socket);
-    sender_mailbox.Send(receiver_address, kTestMessage);
+    sender_mailbox.Send(receiver_address, TestMessage);
     while (!sender_mailbox.Flushed()) {
     }
   }};
@@ -38,30 +38,28 @@ TEST(AsyncMailboxTest, UnicastDelivery_Thread) {
   Address from;
   Address to;
   std::string message;
-  bool success = false;
-  for (uint8_t i = 0; i < kMaxRetries && !success; i++) {
+  bool success{false};
+  for (uint8_t i{0}; i < MaxRetries && !success; ++i) {
     success = receiver_mailbox.Receive(from, to, message);
   }
   ASSERT_TRUE(success);
-  ASSERT_EQ(kTestMessage, message);
+  ASSERT_EQ(TestMessage, message);
   worker.join();
 }
 
 TEST(AsyncMailboxTest, UnicastDelivery_Process) {
-  Address receiver_address(kLocalhost, 0);
+  Address receiver_address(Localhost, 0);
   UDPSocket receiver_socket(receiver_address);
   AsyncMailbox receiver_mailbox(receiver_socket);
 
   // Fork child process
-  pid_t pid = fork();
+  pid_t pid{fork()};
 
   if (pid == 0) {
-    // Child sends message after delay
-    sleep(1);
-    Address sender_address(kLocalhost, 0);
+    Address sender_address(Localhost, 0);
     UDPSocket sender_socket(sender_address);
     AsyncMailbox sender_mailbox(sender_socket);
-    sender_mailbox.Send(receiver_address, kTestMessage);
+    sender_mailbox.Send(receiver_address, TestMessage);
     while (!sender_mailbox.Flushed()) {
     }
     _exit(0);
@@ -70,39 +68,39 @@ TEST(AsyncMailboxTest, UnicastDelivery_Process) {
     Address from;
     Address to;
     std::string message;
-    bool success = false;
-    for (uint8_t i = 0; i < kMaxRetries && !success; i++) {
+    bool success{false};
+    for (uint8_t i{0}; i < MaxRetries && !success; ++i) {
       success = receiver_mailbox.Receive(from, to, message);
     }
     ASSERT_TRUE(success);
-    ASSERT_EQ(kTestMessage, message);
+    ASSERT_EQ(TestMessage, message);
   }
 }
 
 TEST(AsyncMailboxTest, UnicastAcknowledgement) {
   MockSocket sender_socket;
   AsyncMailbox sender_mailbox(sender_socket);
-  Address sender_address(kLocalhost, 0);
+  Address sender_address(Localhost, 0);
 
   MockSocket receiver_socket;
   AsyncMailbox receiver_mailbox(receiver_socket);
-  Address receiver_address(kLocalhost, 0);
+  Address receiver_address(Localhost, 0);
 
-  sender_mailbox.Send(receiver_address, kTestMessage);
+  sender_mailbox.Send(receiver_address, TestMessage);
 
   // Outgoing Message
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     sender_socket.Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
-    ASSERT_EQ(kTestPacketLength, length);
-    ASSERT_ARRAY_EQ(length, kTestPacket, buffer);
+    ASSERT_EQ(TestPacketLength, length);
+    ASSERT_ARRAY_EQ(length, TestPacket, buffer);
   }
 
-  receiver_socket.Push(sender_address, receiver_address, &kTestPacket[0],
-                       kTestPacketLength);
+  receiver_socket.Push(sender_address, receiver_address, &TestPacket[0],
+                       TestPacketLength);
 
   // Incoming Message
   {
@@ -112,23 +110,23 @@ TEST(AsyncMailboxTest, UnicastAcknowledgement) {
     ASSERT_TRUE(receiver_mailbox.Receive(from, to, message));
     ASSERT_EQ(sender_address.ip(), from.ip());
     // Sender's port is not bound, so dont assert value
-    ASSERT_EQ(kTestMessage, message);
+    ASSERT_EQ(TestMessage, message);
   }
 
   // Outgoing Ack
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     receiver_socket.Await(to, buffer, length);
     ASSERT_EQ(sender_address.ip(), to.ip());
     // Sender's port is not bound, so dont assert value
-    ASSERT_EQ(kTestAckLength, length);
-    ASSERT_ARRAY_EQ(length, kTestAck, buffer);
+    ASSERT_EQ(TestAckLength, length);
+    ASSERT_ARRAY_EQ(length, TestAck, buffer);
   }
 
-  sender_socket.Push(receiver_address, sender_address, &kTestAck[0],
-                     kTestAckLength);
+  sender_socket.Push(receiver_address, sender_address, &TestAck[0],
+                     TestAckLength);
 
   // Incoming Ack
   {
@@ -140,23 +138,23 @@ TEST(AsyncMailboxTest, UnicastAcknowledgement) {
 TEST(AsyncMailboxTest, UnicastRetry_DroppedMessage) {
   MockSocket sender_socket;
   AsyncMailbox sender_mailbox(sender_socket);
-  Address sender_address(kLocalhost, 0);
+  Address sender_address(Localhost, 0);
 
   MockSocket receiver_socket;
   AsyncMailbox receiver_mailbox(receiver_socket);
-  Address receiver_address(kLocalhost, 0);
+  Address receiver_address(Localhost, 0);
 
-  sender_mailbox.Send(receiver_address, kTestMessage);
+  sender_mailbox.Send(receiver_address, TestMessage);
 
   // Outgoing Message
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     sender_socket.Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
-    ASSERT_EQ(kTestPacketLength, length);
-    ASSERT_ARRAY_EQ(length, kTestPacket, buffer);
+    ASSERT_EQ(TestPacketLength, length);
+    ASSERT_ARRAY_EQ(length, TestPacket, buffer);
   }
 
   // Incoming Message NOT Received
@@ -164,16 +162,16 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedMessage) {
   // Retry Message
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     sender_socket.Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
-    ASSERT_EQ(kTestPacketLength, length);
-    ASSERT_ARRAY_EQ(length, kTestPacket, buffer);
+    ASSERT_EQ(TestPacketLength, length);
+    ASSERT_ARRAY_EQ(length, TestPacket, buffer);
   }
 
-  receiver_socket.Push(sender_address, receiver_address, &kTestPacket[0],
-                       kTestPacketLength);
+  receiver_socket.Push(sender_address, receiver_address, &TestPacket[0],
+                       TestPacketLength);
 
   // Incoming Message
   {
@@ -184,23 +182,23 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedMessage) {
     ASSERT_EQ(sender_address.ip(), from.ip());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(receiver_address, to);
-    ASSERT_EQ(kTestMessage, message);
+    ASSERT_EQ(TestMessage, message);
   }
 
   // Outgoing Ack
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     receiver_socket.Await(to, buffer, length);
     ASSERT_EQ(sender_address.ip(), to.ip());
     // Sender's port is not bound, so dont assert value
-    ASSERT_EQ(kTestAckLength, length);
-    ASSERT_ARRAY_EQ(length, kTestAck, buffer);
+    ASSERT_EQ(TestAckLength, length);
+    ASSERT_ARRAY_EQ(length, TestAck, buffer);
   }
 
-  sender_socket.Push(receiver_address, sender_address, &kTestAck[0],
-                     kTestAckLength);
+  sender_socket.Push(receiver_address, sender_address, &TestAck[0],
+                     TestAckLength);
 
   // Incoming Ack
   {
@@ -212,27 +210,27 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedMessage) {
 TEST(AsyncMailboxTest, UnicastRetry_DroppedAck) {
   MockSocket sender_socket;
   AsyncMailbox sender_mailbox(sender_socket);
-  Address sender_address(kLocalhost, 0);
+  Address sender_address(Localhost, 0);
 
   MockSocket receiver_socket;
   AsyncMailbox receiver_mailbox(receiver_socket);
-  Address receiver_address(kLocalhost, 0);
+  Address receiver_address(Localhost, 0);
 
-  sender_mailbox.Send(receiver_address, kTestMessage);
+  sender_mailbox.Send(receiver_address, TestMessage);
 
   // Outgoing Message
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     sender_socket.Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
-    ASSERT_EQ(kTestPacketLength, length);
-    ASSERT_ARRAY_EQ(length, kTestPacket, buffer);
+    ASSERT_EQ(TestPacketLength, length);
+    ASSERT_ARRAY_EQ(length, TestPacket, buffer);
   }
 
-  receiver_socket.Push(sender_address, receiver_address, &kTestPacket[0],
-                       kTestPacketLength);
+  receiver_socket.Push(sender_address, receiver_address, &TestPacket[0],
+                       TestPacketLength);
 
   // Incoming Message
   {
@@ -243,19 +241,19 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedAck) {
     ASSERT_EQ(sender_address.ip(), from.ip());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(receiver_address, to);
-    ASSERT_EQ(kTestMessage, message);
+    ASSERT_EQ(TestMessage, message);
   }
 
   // Outgoing Ack
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     receiver_socket.Await(to, buffer, length);
     ASSERT_EQ(sender_address.ip(), to.ip());
     // Sender's port is not bound, so dont assert value
-    ASSERT_EQ(kTestAckLength, length);
-    ASSERT_ARRAY_EQ(length, kTestAck, buffer);
+    ASSERT_EQ(TestAckLength, length);
+    ASSERT_ARRAY_EQ(length, TestAck, buffer);
   }
 
   // Incoming Ack NOT Received
@@ -263,16 +261,16 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedAck) {
   // Retry Message
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     sender_socket.Await(to, buffer, length);
     ASSERT_EQ(receiver_address, to);
-    ASSERT_EQ(kTestPacketLength, length);
-    ASSERT_ARRAY_EQ(length, kTestPacket, buffer);
+    ASSERT_EQ(TestPacketLength, length);
+    ASSERT_ARRAY_EQ(length, TestPacket, buffer);
   }
 
-  receiver_socket.Push(sender_address, receiver_address, &kTestPacket[0],
-                       kTestPacketLength);
+  receiver_socket.Push(sender_address, receiver_address, &TestPacket[0],
+                       TestPacketLength);
 
   // Incoming Message Dropped
   {
@@ -285,17 +283,17 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedAck) {
   // Outgoing Ack
   {
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     receiver_socket.Await(to, buffer, length);
     ASSERT_EQ(sender_address.ip(), to.ip());
     // Sender's port is not bound, so dont assert value
-    ASSERT_EQ(kTestAckLength, length);
-    ASSERT_ARRAY_EQ(length, kTestAck, buffer);
+    ASSERT_EQ(TestAckLength, length);
+    ASSERT_ARRAY_EQ(length, TestAck, buffer);
   }
 
-  sender_socket.Push(receiver_address, sender_address, &kTestAck[0],
-                     kTestAckLength);
+  sender_socket.Push(receiver_address, sender_address, &TestAck[0],
+                     TestAckLength);
 
   // Incoming Ack
   {
@@ -305,19 +303,17 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedAck) {
 }
 
 TEST(AsyncMailboxTest, MulticastDelivery_Thread) {
-  Address receiver_address(kLocalhost, 0);
+  Address receiver_address(Localhost, 0);
   UDPSocket receiver_socket(receiver_address);
-  Address multicast_address(kTestMulticastIP, kTestPort);
+  Address multicast_address(TestMulticastIP, TestPort);
   ASSERT_TRUE(receiver_socket.JoinGroup(multicast_address));
   AsyncMailbox receiver_mailbox(receiver_socket);
 
   std::thread worker{[multicast_address] {
-    // Thread sends message after delay
-    sleep(1);
-    Address sender_address(kLocalhost, 0);
+    Address sender_address(Localhost, 0);
     UDPSocket sender_socket(sender_address);
     AsyncMailbox sender_mailbox(sender_socket);
-    sender_mailbox.Send(multicast_address, kTestMessage);
+    sender_mailbox.Send(multicast_address, TestMessage);
     while (!sender_mailbox.Flushed()) {
     }
   }};
@@ -325,33 +321,31 @@ TEST(AsyncMailboxTest, MulticastDelivery_Thread) {
   Address from;
   Address to;
   std::string message;
-  bool success = false;
-  for (uint8_t i = 0; i < kMaxRetries && !success; i++) {
+  bool success{false};
+  for (uint8_t i{0}; i < MaxRetries && !success; ++i) {
     success = receiver_mailbox.Receive(from, to, message);
   }
   ASSERT_TRUE(success);
   ASSERT_EQ(multicast_address, to);
-  ASSERT_EQ(kTestMessage, message);
+  ASSERT_EQ(TestMessage, message);
   worker.join();
 }
 
 TEST(AsyncMailboxTest, MulticastDelivery_Process) {
-  Address receiver_address(kLocalhost, 0);
+  Address receiver_address(Localhost, 0);
   UDPSocket receiver_socket(receiver_address);
-  Address multicast_address(kTestMulticastIP, kTestPort);
+  Address multicast_address(TestMulticastIP, TestPort);
   ASSERT_TRUE(receiver_socket.JoinGroup(multicast_address));
   AsyncMailbox receiver_mailbox(receiver_socket);
 
   // Fork child process
-  pid_t pid = fork();
+  pid_t pid{fork()};
 
   if (pid == 0) {
-    // Child sends message after delay
-    sleep(1);
-    Address sender_address(kLocalhost, 0);
+    Address sender_address(Localhost, 0);
     UDPSocket sender_socket(sender_address);
     AsyncMailbox sender_mailbox(sender_socket);
-    sender_mailbox.Send(multicast_address, kTestMessage);
+    sender_mailbox.Send(multicast_address, TestMessage);
     while (!sender_mailbox.Flushed()) {
     }
     _exit(0);
@@ -360,12 +354,14 @@ TEST(AsyncMailboxTest, MulticastDelivery_Process) {
     Address from;
     Address to;
     std::string message;
-    bool success = false;
-    for (uint8_t i = 0; i < kMaxRetries && !success; i++) {
+    bool success{false};
+    for (uint8_t i{0}; i < MaxRetries && !success; ++i) {
       success = receiver_mailbox.Receive(from, to, message);
     }
     ASSERT_TRUE(success);
     ASSERT_EQ(multicast_address, to);
-    ASSERT_EQ(kTestMessage, message);
+    ASSERT_EQ(TestMessage, message);
   }
 }
+
+};  // namespace Wink::Test

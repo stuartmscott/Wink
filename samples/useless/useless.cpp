@@ -10,6 +10,8 @@
 #include <sstream>
 #include <string>
 
+using namespace Wink;
+
 int main(int argc, char** argv) {
   if (argc < 4) {
     Error() << "Incorrect parameters, expected <name> <address> <parent>"

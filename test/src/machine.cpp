@@ -8,6 +8,8 @@
 #include <thread>
 #include <vector>
 
+namespace Wink::Test {
+
 TEST(MachineTest, UID) {
   std::string name("test/Test");
   MockMailbox mailbox;
@@ -63,8 +65,8 @@ TEST(MachineTest, Start) {
   Address address(":42002");
   Address parent(":42001");
 
-  int mainOnEntry = 0;
-  int mainOnExit = 0;
+  int mainOnEntry{0};
+  int mainOnExit{0};
 
   Machine m(name, mailbox, address, parent);
   m.AddState(State(
@@ -74,11 +76,11 @@ TEST(MachineTest, Start) {
       "",
       // On Entry Action
       [&m, &mainOnEntry]() {
-        mainOnEntry++;
+        ++mainOnEntry;
         m.Exit();
       },
       // On Exit Action
-      [&mainOnExit]() { mainOnExit++; },
+      [&mainOnExit]() { ++mainOnExit; },
       // Receivers
       {}));
   m.Start();
@@ -99,10 +101,10 @@ TEST(MachineTest, Start_InitialState) {
   Address address(":42002");
   Address parent(":42001");
 
-  int firstOnEntry = 0;
-  int firstOnExit = 0;
-  int secondOnEntry = 0;
-  int secondOnExit = 0;
+  int firstOnEntry{0};
+  int firstOnExit{0};
+  int secondOnEntry{0};
+  int secondOnExit{0};
 
   Machine m(name, mailbox, address, parent);
   m.AddState(State(
@@ -112,13 +114,13 @@ TEST(MachineTest, Start_InitialState) {
       "",
       // On Entry Action
       [&m, &firstOnEntry]() {
-        firstOnEntry++;
+        ++firstOnEntry;
         Info() << "firstOnEntry: " << firstOnEntry << std::endl;
         m.Exit();
       },
       // On Exit Action
       [&firstOnExit]() {
-        firstOnExit++;
+        ++firstOnExit;
         Info() << "firstOnExit: " << firstOnExit << std::endl;
       },
       // Receivers
@@ -130,13 +132,13 @@ TEST(MachineTest, Start_InitialState) {
       "",
       // On Entry Action
       [&m, &secondOnEntry]() {
-        secondOnEntry++;
+        ++secondOnEntry;
         Info() << "secondOnEntry: " << secondOnEntry << std::endl;
         m.Transition("first");
       },
       // On Exit Action
       [&secondOnExit]() {
-        secondOnExit++;
+        ++secondOnExit;
         Info() << "secondOnExit: " << secondOnExit << std::endl;
       },
       // Receivers
@@ -168,7 +170,7 @@ TEST(MachineTest, Exit) {
   Address parent(":42001");
 
   // Set mock send result
-  SendResult result = 0;
+  SendResult result{0};
   mailbox.sendResults_.push_back(result);
   mailbox.sendResults_.push_back(result);
   mailbox.sendResults_.push_back(result);
@@ -183,24 +185,24 @@ TEST(MachineTest, Exit) {
   // Check mailbox send
   ASSERT_EQ(4, mailbox.sendArgs_.size());
   // Send Started Message to Spawner
-  const auto arg0 = mailbox.sendArgs_.at(0);
+  const auto arg0{mailbox.sendArgs_.at(0)};
   ASSERT_EQ(parent.ip(), arg0.toIP);
   ASSERT_EQ(parent.port(), arg0.toPort);
   ASSERT_EQ(std::string("started test/Test"), arg0.message);
   // Register Machine
-  const auto arg1 = mailbox.sendArgs_.at(1);
-  ASSERT_EQ(kLocalhost, arg1.toIP);
-  ASSERT_EQ(kServerPort, arg1.toPort);
+  const auto arg1{mailbox.sendArgs_.at(1)};
+  ASSERT_EQ(Localhost, arg1.toIP);
+  ASSERT_EQ(ServerPort, arg1.toPort);
   ASSERT_TRUE(arg1.message.starts_with("register test/Test "));
   // Send Exited Message to Spawner
-  const auto arg2 = mailbox.sendArgs_.at(2);
+  const auto arg2{mailbox.sendArgs_.at(2)};
   ASSERT_EQ(parent.ip(), arg2.toIP);
   ASSERT_EQ(parent.port(), arg2.toPort);
   ASSERT_EQ(std::string("exited test/Test"), arg2.message);
   // Unregister Machine
-  const auto arg3 = mailbox.sendArgs_.at(3);
-  ASSERT_EQ(kLocalhost, arg3.toIP);
-  ASSERT_EQ(kServerPort, arg3.toPort);
+  const auto arg3{mailbox.sendArgs_.at(3)};
+  ASSERT_EQ(Localhost, arg3.toIP);
+  ASSERT_EQ(ServerPort, arg3.toPort);
   ASSERT_EQ(std::string("unregister"), arg3.message);
 }
 
@@ -211,7 +213,7 @@ TEST(MachineTest, Error) {
   Address parent(":42001");
 
   // Set mock send result
-  SendResult result = 0;
+  SendResult result{0};
   mailbox.sendResults_.push_back(result);
   mailbox.sendResults_.push_back(result);
   mailbox.sendResults_.push_back(result);
@@ -227,29 +229,29 @@ TEST(MachineTest, Error) {
   // Check mailbox send
   ASSERT_EQ(5, mailbox.sendArgs_.size());
   // Send Started Message to Spawner
-  const auto arg0 = mailbox.sendArgs_.at(0);
+  const auto arg0{mailbox.sendArgs_.at(0)};
   ASSERT_EQ(parent.ip(), arg0.toIP);
   ASSERT_EQ(parent.port(), arg0.toPort);
   ASSERT_EQ(std::string("started test/Test"), arg0.message);
   // Register Machine
-  const auto arg1 = mailbox.sendArgs_.at(1);
-  ASSERT_EQ(kLocalhost, arg1.toIP);
-  ASSERT_EQ(kServerPort, arg1.toPort);
+  const auto arg1{mailbox.sendArgs_.at(1)};
+  ASSERT_EQ(Localhost, arg1.toIP);
+  ASSERT_EQ(ServerPort, arg1.toPort);
   ASSERT_TRUE(arg1.message.starts_with("register test/Test "));
   // Send Errored Message to Spawner
-  const auto arg2 = mailbox.sendArgs_.at(2);
+  const auto arg2{mailbox.sendArgs_.at(2)};
   ASSERT_EQ(parent.ip(), arg2.toIP);
   ASSERT_EQ(parent.port(), arg2.toPort);
   ASSERT_EQ(std::string("errored test/Test AHHHH"), arg2.message);
   // Send Exited Message to Spawner
-  const auto arg3 = mailbox.sendArgs_.at(3);
+  const auto arg3{mailbox.sendArgs_.at(3)};
   ASSERT_EQ(parent.ip(), arg3.toIP);
   ASSERT_EQ(parent.port(), arg3.toPort);
   ASSERT_EQ(std::string("exited test/Test"), arg3.message);
   // Unregister Machine
-  const auto arg4 = mailbox.sendArgs_.at(4);
-  ASSERT_EQ(kLocalhost, arg4.toIP);
-  ASSERT_EQ(kServerPort, arg4.toPort);
+  const auto arg4{mailbox.sendArgs_.at(4)};
+  ASSERT_EQ(Localhost, arg4.toIP);
+  ASSERT_EQ(ServerPort, arg4.toPort);
   ASSERT_EQ(std::string("unregister"), arg4.message);
 }
 
@@ -260,7 +262,7 @@ TEST(MachineTest, AddState) {
   Address parent(":42001");
 
   // Set mock send result
-  SendResult result = 0;
+  SendResult result{0};
   mailbox.sendResults_.push_back(result);
 
   Machine m(name, mailbox, address, parent);
@@ -276,10 +278,10 @@ TEST(MachineTest, Transition) {
 
   Machine m(name, mailbox, address, parent);
 
-  int firstOnEntry = 0;
-  int firstOnExit = 0;
-  int secondOnEntry = 0;
-  int secondOnExit = 0;
+  int firstOnEntry{0};
+  int firstOnExit{0};
+  int secondOnEntry{0};
+  int secondOnExit{0};
 
   m.AddState(State(
       // State Name
@@ -287,9 +289,9 @@ TEST(MachineTest, Transition) {
       // Parent State
       "",
       // On Entry Action
-      [&firstOnEntry]() { firstOnEntry++; },
+      [&firstOnEntry]() { ++firstOnEntry; },
       // On Exit Action
-      [&firstOnExit]() { firstOnExit++; },
+      [&firstOnExit]() { ++firstOnExit; },
       // Receivers
       {}));
 
@@ -299,9 +301,9 @@ TEST(MachineTest, Transition) {
       // Parent State
       "",
       // On Entry Action
-      [&secondOnEntry]() { secondOnEntry++; },
+      [&secondOnEntry]() { ++secondOnEntry; },
       // On Exit Action
-      [&secondOnExit]() { secondOnExit++; },
+      [&secondOnExit]() { ++secondOnExit; },
       // Receivers
       {}));
 
@@ -440,20 +442,20 @@ TEST(MachineTest, Send) {
   Address parent(":42001");
 
   // Set mock send result
-  SendResult result = 0;
+  SendResult result{0};
   mailbox.sendResults_.push_back(result);
 
   Machine m(name, mailbox, address, parent);
 
   Address destination(":42003");
-  m.Send(destination, kTestMessage);
+  m.Send(destination, TestMessage);
 
   // Check mailbox send
   ASSERT_EQ(1, mailbox.sendArgs_.size());
-  const auto arg = mailbox.sendArgs_.at(0);
+  const auto arg{mailbox.sendArgs_.at(0)};
   ASSERT_EQ(destination.ip(), arg.toIP);
   ASSERT_EQ(destination.port(), arg.toPort);
-  ASSERT_EQ(std::string(kTestMessage), arg.message);
+  ASSERT_EQ(std::string(TestMessage), arg.message);
 }
 
 TEST(MachineTest, SendAt) {
@@ -480,7 +482,7 @@ TEST(MachineTest, SendAt) {
       }));
   std::thread worker([&]() { m.Start(); });
 
-  auto time = std::chrono::system_clock::now();
+  auto time{std::chrono::system_clock::now()};
   time += std::chrono::seconds(1);
   m.SendAt(address, "exit", time);
 
@@ -523,7 +525,7 @@ TEST(MachineTest, Spawn_Local) {
   Address parent(":42001");
 
   // Set mock send result
-  SendResult result = 0;
+  SendResult result{0};
   mailbox.sendResults_.push_back(result);
 
   Machine m(name, mailbox, address, parent);
@@ -531,9 +533,9 @@ TEST(MachineTest, Spawn_Local) {
 
   // Check mailbox send
   ASSERT_EQ(1, mailbox.sendArgs_.size());
-  const auto arg = mailbox.sendArgs_.at(0);
-  ASSERT_EQ(kLocalhost, arg.toIP);
-  ASSERT_EQ(kServerPort, arg.toPort);
+  const auto arg{mailbox.sendArgs_.at(0)};
+  ASSERT_EQ(Localhost, arg.toIP);
+  ASSERT_EQ(ServerPort, arg.toPort);
   ASSERT_EQ(std::string("start useless/Useless :0"), arg.message);
 }
 
@@ -544,18 +546,18 @@ TEST(MachineTest, Spawn_Remote) {
   Address parent(":42001");
 
   // Set mock send result
-  SendResult result = 0;
+  SendResult result{0};
   mailbox.sendResults_.push_back(result);
 
   Machine m(name, mailbox, address, parent);
-  Address destination(kTestUnicastIP, kTestPort);
+  Address destination(TestUnicastIP, TestPort);
   m.Spawn("useless/Useless", destination);
 
   // Check mailbox send
   ASSERT_EQ(1, mailbox.sendArgs_.size());
-  const auto arg = mailbox.sendArgs_.at(0);
-  ASSERT_EQ(kTestUnicastIP, arg.toIP);
-  ASSERT_EQ(kServerPort, arg.toPort);
+  const auto arg{mailbox.sendArgs_.at(0)};
+  ASSERT_EQ(TestUnicastIP, arg.toIP);
+  ASSERT_EQ(ServerPort, arg.toPort);
   ASSERT_EQ(std::string("start useless/Useless :42424"), arg.message);
 }
 
@@ -678,11 +680,13 @@ TEST(MachineTest, PruneLineage) {
 }
 
 TEST(MachineTest, ParseMachineName) {
-  const auto a = ParseMachineName("foo/Bar");
+  const auto a{ParseMachineName("foo/Bar")};
   ASSERT_EQ("foo/Bar", a.first);
   ASSERT_EQ("", a.second);
 
-  const auto b = ParseMachineName("foo/Bar#Baz");
+  const auto b{ParseMachineName("foo/Bar#Baz")};
   ASSERT_EQ("foo/Bar", b.first);
   ASSERT_EQ("Baz", b.second);
 }
+
+};  // namespace Wink::Test

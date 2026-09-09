@@ -6,6 +6,8 @@
 #include <cstring>
 #include <string>
 
+namespace Wink {
+
 UDPSocket::UDPSocket(Address& address)
     : address_(address),
       unicast_socket_(socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) {
@@ -16,7 +18,7 @@ UDPSocket::UDPSocket(Address& address)
   }
 
   // Enable address reuse on unicast socket
-  auto on = 1;
+  auto on{1};
   if (setsockopt(unicast_socket_, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) <
       0) {
     throw std::runtime_error(
@@ -27,9 +29,9 @@ UDPSocket::UDPSocket(Address& address)
   // Bind unicast socket
   sockaddr_in unicast_address = {};
   address.WriteTo(unicast_address);
-  socklen_t size = sizeof(struct sockaddr_in);
-  if (const auto result =
-          bind(unicast_socket_, (struct sockaddr*)&unicast_address, size);
+  socklen_t size{sizeof(struct sockaddr_in)};
+  if (const auto result{
+          bind(unicast_socket_, (struct sockaddr*)&unicast_address, size)};
       result < 0) {
     throw std::runtime_error(
         std::string("Failed to bind UDP unicast socket to ") +
@@ -37,8 +39,8 @@ UDPSocket::UDPSocket(Address& address)
   }
 
   // Retrieve assigned unicast address
-  if (const auto result = getsockname(
-          unicast_socket_, (struct sockaddr*)&unicast_address, &size);
+  if (const auto result{getsockname(unicast_socket_,
+                                    (struct sockaddr*)&unicast_address, &size)};
       result < 0) {
     throw std::runtime_error(
         std::string("Failed to get UDP unicast socket name: ") +
@@ -48,8 +50,8 @@ UDPSocket::UDPSocket(Address& address)
 
   // Set receive timeout on unicast socket
   timeval tv = {};
-  tv.tv_sec = kReceiveTimeout.count();
-  tv.tv_usec = 0;
+  tv.tv_sec = 0;
+  tv.tv_usec = ReceiveTimeout.count();
   if (setsockopt(unicast_socket_, SOL_SOCKET, SO_RCVTIMEO, &tv,
                  sizeof(struct timeval)) < 0) {
     throw std::runtime_error(
@@ -71,9 +73,9 @@ UDPSocket::UDPSocket(Address& address)
 bool UDPSocket::Receive(Address& from, Address& to, char* buffer,
                         size_t& length) {
   sockaddr_in address = {};
-  socklen_t size = sizeof(struct sockaddr_in);
-  const ssize_t result = recvfrom(unicast_socket_, buffer, kMaxUDPPayload, 0,
-                                  (struct sockaddr*)&address, &size);
+  socklen_t size{sizeof(struct sockaddr_in)};
+  const ssize_t result{recvfrom(unicast_socket_, buffer, MaxUDPPayload, 0,
+                                (struct sockaddr*)&address, &size)};
   if (result <= 0) {
     if (errno != EAGAIN) {
       Error() << "Failed to receive unicast packet: " << std::strerror(errno)
@@ -91,9 +93,9 @@ bool UDPSocket::ReceiveMulticast(Address& from, Address& to, char* buffer,
                                  size_t& length) {
   for (const auto& [group, multicast_socket] : multicast_sockets_) {
     sockaddr_in address = {};
-    socklen_t size = sizeof(struct sockaddr_in);
-    const ssize_t result = recvfrom(multicast_socket, buffer, kMaxUDPPayload, 0,
-                                    (struct sockaddr*)&address, &size);
+    socklen_t size{sizeof(struct sockaddr_in)};
+    const ssize_t result{recvfrom(multicast_socket, buffer, MaxUDPPayload, 0,
+                                  (struct sockaddr*)&address, &size)};
     if (result <= 0) {
       if (errno != EAGAIN) {
         Error() << "Failed to receive multicast packet from " << group << ": "
@@ -134,7 +136,7 @@ bool UDPSocket::JoinGroup(const Address& group) {
   }
 
   // Enable address reuse on multicast socket
-  auto on = 1;
+  auto on{1};
   if (setsockopt(multicast_socket, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(int)) <
       0) {
     Error() << "Failed to set UDP multicast socket reuse option: "
@@ -160,8 +162,8 @@ bool UDPSocket::JoinGroup(const Address& group) {
 
   // Set receive timeout on unicast socket
   timeval tv = {};
-  tv.tv_sec = kReceiveTimeout.count();
-  tv.tv_usec = 0;
+  tv.tv_sec = 0;
+  tv.tv_usec = ReceiveTimeout.count();
   if (setsockopt(multicast_socket, SOL_SOCKET, SO_RCVTIMEO, &tv,
                  sizeof(struct timeval)) < 0) {
     Error() << "Failed to set UDP multicast socket receive timeout: "
@@ -187,9 +189,9 @@ bool UDPSocket::JoinGroup(const Address& group) {
 }
 
 bool UDPSocket::LeaveGroup(const Address& group) {
-  if (const auto it = multicast_sockets_.find(group);
+  if (const auto it{multicast_sockets_.find(group)};
       it != multicast_sockets_.end()) {
-    const auto multicast_socket = it->second;
+    const auto multicast_socket{it->second};
     multicast_sockets_.erase(it);
 
     // Leave multicast group
@@ -209,3 +211,5 @@ bool UDPSocket::LeaveGroup(const Address& group) {
   }
   return false;
 }
+
+};  // namespace Wink

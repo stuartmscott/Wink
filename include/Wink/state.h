@@ -6,6 +6,8 @@
 #include <map>
 #include <string>
 
+namespace Wink {
+
 typedef std::function<void()> Trigger;
 typedef std::function<void(const Address&, const Address&, std::istream&)>
     Receiver;
@@ -37,11 +39,13 @@ class State {
   State& operator=(State&& s) = delete;
   ~State() {}
 
-  const std::string name_ = "";
-  const std::string parent_ = "";
+  const std::string name_;
+  const std::string parent_;
   const Trigger on_enter_;
   const Trigger on_exit_;
   const ReceiverMap receivers_;
 };
+
+};  // namespace Wink
 
 #endif  // INCLUDE_WINK_STATE_H_

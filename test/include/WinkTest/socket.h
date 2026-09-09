@@ -10,6 +10,8 @@
 #include <cstring>
 #include <deque>
 
+namespace Wink::Test {
+
 class MockSocket : public Socket {
  public:
   bool Receive(Address&, Address&, char*, size_t&) override;
@@ -25,7 +27,7 @@ class MockSocket : public Socket {
   struct Packet {
     Address from;
     Address to;
-    char buffer[kMaxTestPayload];
+    char buffer[MaxTestPayload];
     size_t length;
     Packet(const Address f, const Address t, const char* b, const size_t l)
         : from(f), to(t), length(l) {
@@ -36,5 +38,7 @@ class MockSocket : public Socket {
   std::deque<Packet> receive_multicast_queue_;
   std::deque<Packet> send_queue_;
 };
+
+};  // namespace Wink::Test
 
 #endif  // TEST_INCLUDE_WINKTEST_SOCKET_H_

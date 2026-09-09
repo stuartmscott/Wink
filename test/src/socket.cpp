@@ -4,13 +4,15 @@
 
 #include <thread>
 
+namespace Wink::Test {
+
 bool MockSocket::Receive(Address& from, Address& to, char* buffer,
                          size_t& length) {
   std::scoped_lock lock(mutex_);
   if (receive_queue_.empty()) {
     return false;
   }
-  const auto p = receive_queue_.front();
+  const auto p{receive_queue_.front()};
   from = p.from;
   to = p.to;
   std::memcpy(buffer, p.buffer, p.length);
@@ -31,7 +33,7 @@ bool MockSocket::ReceiveMulticast(Address& from, Address& to, char* buffer,
   if (receive_multicast_queue_.empty()) {
     return false;
   }
-  const auto p = receive_multicast_queue_.front();
+  const auto p{receive_multicast_queue_.front()};
   from = p.from;
   to = p.to;
   std::memcpy(buffer, p.buffer, p.length);
@@ -58,7 +60,7 @@ bool MockSocket::Pop(Address& to, char* buffer, size_t& length) {
   if (send_queue_.empty()) {
     return false;
   }
-  const auto p = send_queue_.front();
+  const auto p{send_queue_.front()};
   to = p.to;
   std::memcpy(buffer, p.buffer, p.length);
   length = p.length;
@@ -71,3 +73,5 @@ void MockSocket::Await(Address& to, char* buffer, size_t& length) {
     std::this_thread::sleep_for(std::chrono::seconds(1));
   }
 }
+
+};  // namespace Wink::Test

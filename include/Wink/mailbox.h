@@ -14,6 +14,8 @@
 #include <string>
 #include <thread>
 
+namespace Wink {
+
 class Mailbox {
  public:
   Mailbox() {}
@@ -53,8 +55,8 @@ class AsyncMailbox : public Mailbox {
     std::string message;
   };
   Socket& socket_;
-  char receive_buffer_[kMaxUDPPayload];
-  char send_buffer_[kMaxUDPPayload];
+  char receive_buffer_[MaxUDPPayload];
+  char send_buffer_[MaxUDPPayload];
   std::mutex incoming_mutex_;
   std::mutex outgoing_mutex_;
   std::condition_variable incoming_condition_;
@@ -64,9 +66,11 @@ class AsyncMailbox : public Mailbox {
   std::deque<QueuedMessage> outgoing_multicasts_;
   std::map<const Address, uint64_t> incoming_seq_nums_;
   std::map<const Address, uint64_t> outgoing_seq_nums_;
-  std::atomic_bool running_ = true;
+  std::atomic_bool running_{true};
   std::thread receiver_;
   std::thread sender_;
 };
+
+};  // namespace Wink
 
 #endif  // INCLUDE_WINK_MAILBOX_H_

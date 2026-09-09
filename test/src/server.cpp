@@ -7,15 +7,17 @@
 
 #include <string>
 
+namespace Wink::Test {
+
 TEST(ServerTest, Registration) {
-  Address server_address(kLocalhost, kServerPort);
+  Address server_address(Localhost, ServerPort);
   UDPSocket server_socket(server_address);
   AsyncMailbox server_mailbox(server_socket);
-  Server server(server_address, server_mailbox);
+  Server::Server server(server_address, server_mailbox);
 
   std::thread worker{[&server] { server.Serve("../../samples/"); }};
 
-  Address client_address(kLocalhost, 0);
+  Address client_address(Localhost, 0);
   UDPSocket client_socket(client_address);
   AsyncMailbox client_mailbox(client_socket);
 
@@ -63,14 +65,14 @@ TEST(ServerTest, Registration) {
 }
 
 TEST(ServerTest, StartListStop) {
-  Address server_address(kLocalhost, kServerPort);
+  Address server_address(Localhost, ServerPort);
   UDPSocket server_socket(server_address);
   AsyncMailbox server_mailbox(server_socket);
-  Server server(server_address, server_mailbox);
+  Server::Server server(server_address, server_mailbox);
 
   std::thread worker{[&server] { server.Serve("../../samples/"); }};
 
-  Address client_address(kLocalhost, 0);
+  Address client_address(Localhost, 0);
   UDPSocket client_socket(client_address);
   AsyncMailbox client_mailbox(client_socket);
 
@@ -90,14 +92,14 @@ TEST(ServerTest, StartListStop) {
   // Start Machine
   client_mailbox.Send(server_address, "start time/After#foobar :42424");
 
-  sleep(1);
-
   // Assert Machine Started
   ASSERT_TRUE(client_mailbox.Receive(from, to, message));
-  ASSERT_EQ(kLocalhost, from.ip());
-  ASSERT_EQ(42424, from.port());
+  ASSERT_EQ(Localhost, from.ip());
+  ASSERT_EQ(TestPort, from.port());
   ASSERT_EQ(client_address, to);
   ASSERT_EQ("started time/After#foobar", message);
+
+  sleep(1);
 
   // List Machines
   client_mailbox.Send(server_address, "list");
@@ -126,3 +128,5 @@ TEST(ServerTest, StartListStop) {
   server.Shutdown();
   worker.join();
 }
+
+};  // namespace Wink::Test

@@ -10,6 +10,8 @@
 #include <map>
 #include <mutex>
 
+namespace Wink {
+
 class Socket {
  public:
   virtual ~Socket() {}
@@ -35,9 +37,11 @@ class UDPSocket : public Socket {
 
  private:
   Address& address_;
-  int unicast_socket_ = -1;
+  int unicast_socket_{-1};
   std::map<Address, int> multicast_sockets_;
   std::mutex send_mutex_;
 };
+
+};  // namespace Wink
 
 #endif  // INCLUDE_WINK_SOCKET_H_

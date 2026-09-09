@@ -9,47 +9,49 @@
 #include <string>
 #include <vector>
 
+namespace Wink::Test {
+
 TEST(ClientTest, StartMachine) {
   MockMailbox mailbox;
 
   // Set mock send result
   {
-    SendResult result = true;
+    SendResult result{true};
     mailbox.sendResults_.push_back(result);
   }
   // Set mock receive result
   {
     ReceiveResult result;
-    result.fromIP = kTestUnicastIP;
-    result.fromPort = kTestPort;
-    result.toIP = kLocalhost;
-    result.toPort = kTestPort;
+    result.fromIP = TestUnicastIP;
+    result.fromPort = TestPort;
+    result.toIP = Localhost;
+    result.toPort = TestPort;
     result.result = true;
     std::ostringstream oss;
     oss << "started ";
-    oss << kTestBinary;
+    oss << TestBinary;
     result.message = oss.str();
     mailbox.receiveResults_.push_back(result);
   }
 
   // Issue request
-  Address address(kLocalhost, 0);
-  Address destination(kTestUnicastIP, 0);
+  Address address(Localhost, 0);
+  Address destination(TestUnicastIP, 0);
   std::vector<std::string> args;
-  ASSERT_EQ(0, StartMachine(mailbox, address, kTestBinary, destination, args));
+  ASSERT_EQ(0, StartMachine(mailbox, address, TestBinary, destination, args));
 
   // Check mailbox send
   {
     ASSERT_EQ(1, mailbox.sendArgs_.size());
-    const auto arg = mailbox.sendArgs_.at(0);
-    ASSERT_EQ(kTestUnicastIP, arg.toIP);
-    ASSERT_EQ(kServerPort, arg.toPort);
+    const auto arg{mailbox.sendArgs_.at(0)};
+    ASSERT_EQ(TestUnicastIP, arg.toIP);
+    ASSERT_EQ(ServerPort, arg.toPort);
     ASSERT_EQ("start wink.bin :0", arg.message);
   }
 
   // Check destination address
-  ASSERT_EQ(kTestUnicastIP, destination.ip());
-  ASSERT_EQ(kTestPort, destination.port());
+  ASSERT_EQ(TestUnicastIP, destination.ip());
+  ASSERT_EQ(TestPort, destination.port());
 }
 
 TEST(ClientTest, StopMachine) {
@@ -57,18 +59,18 @@ TEST(ClientTest, StopMachine) {
 
   // Set mock send result
   {
-    SendResult result = 0;
+    SendResult result{0};
     mailbox.sendResults_.push_back(result);
   }
 
-  Address address(kTestUnicastIP, kTestPort);
+  Address address(TestUnicastIP, TestPort);
   ASSERT_EQ(0, StopMachine(mailbox, address));
 
   // Check mailbox send
   ASSERT_EQ(1, mailbox.sendArgs_.size());
-  const auto arg = mailbox.sendArgs_.at(0);
-  ASSERT_EQ(kTestUnicastIP, arg.toIP);
-  ASSERT_EQ(kServerPort, arg.toPort);
+  const auto arg{mailbox.sendArgs_.at(0)};
+  ASSERT_EQ(TestUnicastIP, arg.toIP);
+  ASSERT_EQ(ServerPort, arg.toPort);
   ASSERT_EQ("stop 42424", arg.message);
 }
 
@@ -77,19 +79,19 @@ TEST(ClientTest, SendMessage) {
 
   // Set mock send result
   {
-    SendResult result = 0;
+    SendResult result{0};
     mailbox.sendResults_.push_back(result);
   }
 
-  Address address(kTestUnicastIP, kTestPort);
-  SendMessage(mailbox, address, kTestMessage);
+  Address address(TestUnicastIP, TestPort);
+  SendMessage(mailbox, address, TestMessage);
 
   // Check mailbox send
   ASSERT_EQ(1, mailbox.sendArgs_.size());
-  const auto arg = mailbox.sendArgs_.at(0);
-  ASSERT_EQ(kTestUnicastIP, arg.toIP);
-  ASSERT_EQ(kTestPort, arg.toPort);
-  ASSERT_EQ(kTestMessage, arg.message);
+  const auto arg{mailbox.sendArgs_.at(0)};
+  ASSERT_EQ(TestUnicastIP, arg.toIP);
+  ASSERT_EQ(TestPort, arg.toPort);
+  ASSERT_EQ(TestMessage, arg.message);
 }
 
 TEST(ClientTest, ReceiveMessage) {
@@ -98,11 +100,11 @@ TEST(ClientTest, ReceiveMessage) {
   // Set mock receive result
   {
     ReceiveResult result;
-    result.fromIP = kTestUnicastIP;
-    result.fromPort = kTestPort;
-    result.toIP = kTestUnicastIP;
-    result.toPort = kTestPort;
-    result.message = kTestMessage;
+    result.fromIP = TestUnicastIP;
+    result.fromPort = TestPort;
+    result.toIP = TestUnicastIP;
+    result.toPort = TestPort;
+    result.message = TestMessage;
     result.result = true;
     mailbox.receiveResults_.push_back(result);
   }
@@ -114,11 +116,11 @@ TEST(ClientTest, ReceiveMessage) {
 
   // Check mailbox receive
   ASSERT_EQ(1, mailbox.receiveArgs_.size());
-  ASSERT_EQ(kTestUnicastIP, from.ip());
-  ASSERT_EQ(kTestPort, from.port());
-  ASSERT_EQ(kTestUnicastIP, to.ip());
-  ASSERT_EQ(kTestPort, to.port());
-  ASSERT_EQ(kTestMessage, message);
+  ASSERT_EQ(TestUnicastIP, from.ip());
+  ASSERT_EQ(TestPort, from.port());
+  ASSERT_EQ(TestUnicastIP, to.ip());
+  ASSERT_EQ(TestPort, to.port());
+  ASSERT_EQ(TestMessage, message);
 }
 
 TEST(ClientTest, ListMachines) {
@@ -126,36 +128,38 @@ TEST(ClientTest, ListMachines) {
 
   // Set mock send result
   {
-    SendResult result = 0;
+    SendResult result{0};
     mailbox.sendResults_.push_back(result);
   }
   // Set mock receive result
   {
     ReceiveResult result;
-    result.fromIP = kTestUnicastIP;
-    result.fromPort = kServerPort;
+    result.fromIP = TestUnicastIP;
+    result.fromPort = ServerPort;
     result.result = true;
     std::ostringstream oss;
     oss << "Port,Machine,PID\n";
-    oss << kTestPort << ',' << kTestBinary << ',' << kTestPID << '\n';
+    oss << TestPort << ',' << TestBinary << ',' << TestPID << '\n';
     result.message = oss.str();
     mailbox.receiveResults_.push_back(result);
   }
 
   // Issue request
-  Address destination(kTestUnicastIP, kServerPort);
+  Address destination(TestUnicastIP, ServerPort);
   ASSERT_EQ(0, ListMachines(mailbox, destination));
 
   // Check mailbox send
   {
     ASSERT_EQ(1, mailbox.sendArgs_.size());
-    const auto arg = mailbox.sendArgs_.at(0);
-    ASSERT_EQ(kTestUnicastIP, arg.toIP);
-    ASSERT_EQ(kServerPort, arg.toPort);
+    const auto arg{mailbox.sendArgs_.at(0)};
+    ASSERT_EQ(TestUnicastIP, arg.toIP);
+    ASSERT_EQ(ServerPort, arg.toPort);
     ASSERT_EQ("list", arg.message);
   }
 
   // Check destination address
-  ASSERT_EQ(kTestUnicastIP, destination.ip());
-  ASSERT_EQ(kServerPort, destination.port());
+  ASSERT_EQ(TestUnicastIP, destination.ip());
+  ASSERT_EQ(ServerPort, destination.port());
 }
+
+};  // namespace Wink::Test

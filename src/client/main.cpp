@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+namespace Wink {
+
 void Usage(std::string name) {
   Info() << name << std::endl;
   Info() << "\tstart [options] <binary> <host>" << std::endl;
@@ -26,7 +28,7 @@ void Help(std::string name, std::string command) {
     Info() << std::endl;
     Info() << "Options;" << std::endl;
     Info() << "\t-a" << std::endl;
-    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+    Info() << "\t\tThe address to bind to (default " << Localhost << ":<any>)"
            << std::endl;
     Info() << "\t-f" << std::endl;
     Info() << "\t\tFollow the lifecycle of the machine (default false)"
@@ -53,7 +55,7 @@ void Help(std::string name, std::string command) {
     Info() << std::endl;
     Info() << "Options;" << std::endl;
     Info() << "\t-a" << std::endl;
-    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+    Info() << "\t\tThe address to bind to (default " << Localhost << ":<any>)"
            << std::endl;
     Info() << "Parameters;" << std::endl;
     Info() << "\tmachine" << std::endl;
@@ -67,7 +69,7 @@ void Help(std::string name, std::string command) {
     Info() << std::endl;
     Info() << "Options;" << std::endl;
     Info() << "\t-a" << std::endl;
-    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+    Info() << "\t\tThe address to bind to (default " << Localhost << ":<any>)"
            << std::endl;
     Info() << "\t-r" << std::endl;
     Info() << "\t\tThe number of replies to await (default 0)" << std::endl;
@@ -93,7 +95,7 @@ void Help(std::string name, std::string command) {
     Info() << std::endl;
     Info() << "Options;" << std::endl;
     Info() << "\t-a" << std::endl;
-    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+    Info() << "\t\tThe address to bind to (default " << Localhost << ":<any>)"
            << std::endl;
     Info() << "Parameters;" << std::endl;
     Info() << "\tgroup" << std::endl;
@@ -107,7 +109,7 @@ void Help(std::string name, std::string command) {
     Info() << std::endl;
     Info() << "Options;" << std::endl;
     Info() << "\t-a" << std::endl;
-    Info() << "\t\tThe address to bind to (default " << kLocalhost << ":<any>)"
+    Info() << "\t\tThe address to bind to (default " << Localhost << ":<any>)"
            << std::endl;
     Info() << "Parameters;" << std::endl;
     Info() << "\thost" << std::endl;
@@ -127,14 +129,220 @@ void Help(std::string name, std::string command) {
   }
 }
 
+int StartCommand(std::map<std::string, std::string> options,
+                 std::vector<std::string> parameters) {
+  Address address(Localhost, 0);
+  bool follow{false};
+
+  // Parse Options
+  for (const auto& [k, v] : options) {
+    if (k == "-a") {
+      std::stringstream ss(v);
+      ss >> address;
+    } else if (k == "-f") {
+      std::stringstream ss(v);
+      std::string f;
+      ss >> f;
+      std::transform(f.begin(), f.end(), f.begin(), ::tolower);
+      follow = (f == "1" || f == "true");
+    } else {
+      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+    }
+  }
+
+  Address destination(Localhost, 0);
+  std::vector<std::string> args;
+  auto count{parameters.size()};
+  if (count == 0) {
+    Error() << "Missing <binary> parameter" << std::endl;
+    return -1;
+  }
+  std::string binary(parameters.at(0));
+  if (count > 1) {
+    destination.FromString(parameters.at(1));
+    for (uint32_t i{2}; i < count; ++i) {
+      args.push_back(parameters.at(i));
+    }
+  }
+
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
+  return StartMachine(mailbox, address, binary, destination, args, follow);
+}
+
+int StopCommand(std::map<std::string, std::string> options,
+                std::vector<std::string> parameters) {
+  Address address(Localhost, 0);
+
+  // Parse Options
+  for (const auto& [k, v] : options) {
+    if (k == "-a") {
+      std::stringstream ss(v);
+      ss >> address;
+    } else {
+      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+    }
+  }
+
+  Address destination(Localhost, 0);
+  switch (parameters.size()) {
+    case 0:
+      Error() << "Missing <machine> parameter" << std::endl;
+      return -1;
+    case 1: {
+      std::istringstream ss(parameters.at(0));
+      ss >> destination;
+    } break;
+    default:
+      Error() << "Too many parameters" << std::endl;
+      return -1;
+  }
+
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
+  return StopMachine(mailbox, destination);
+}
+
+int SendCommand(std::map<std::string, std::string> options,
+                std::vector<std::string> parameters) {
+  Address address(Localhost, 0);
+  uint32_t replies{0};
+  // Parse Options
+  for (const auto& [k, v] : options) {
+    if (k == "-a") {
+      std::stringstream ss(v);
+      ss >> address;
+    } else if (k == "-r") {
+      std::stringstream ss(v);
+      ss >> replies;
+    } else {
+      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+    }
+  }
+
+  Address destination(Localhost, 0);
+  std::vector<std::string> messages;
+  switch (parameters.size()) {
+    case 0:
+      Error() << "Missing <machine> parameter" << std::endl;
+      return -1;
+    case 1:
+      Error() << "Missing <message> parameter" << std::endl;
+      return -1;
+    default: {
+      const auto s{parameters.at(0)};
+      std::istringstream ss(s);
+      ss >> destination;
+      messages.assign(parameters.begin() + 1, parameters.end());
+    } break;
+  }
+
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
+  SendMessages(mailbox, destination, messages);
+
+  Address from;
+  Address to;
+  std::string reply;
+  for (uint32_t r{0}; r < replies;) {
+    if (ReceiveMessage(mailbox, from, to, reply)) {
+      Info() << to << " < " << from << ' ' << reply << std::endl;
+      ++r;
+    }
+  }
+  return 0;
+}
+
+int ListenCommand(std::map<std::string, std::string> options,
+                  std::vector<std::string> parameters) {
+  Address address(Localhost, 0);
+
+  // Parse Options
+  for (const auto& [k, v] : options) {
+    if (k == "-a") {
+      std::stringstream ss(v);
+      ss >> address;
+    } else {
+      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+    }
+  }
+
+  UDPSocket socket(address);
+  switch (parameters.size()) {
+    case 0:
+      Error() << "Missing <group> parameter" << std::endl;
+      return -1;
+    default: {
+      for (const auto& s : parameters) {
+        Address group;
+        std::istringstream ss(s);
+        ss >> group;
+        if (group.IsMulticast()) {
+          socket.JoinGroup(group);
+        } else {
+          Error() << "Address " << group << " is not a multicast group"
+                  << std::endl;
+          return -1;
+        }
+      }
+    } break;
+  }
+
+  AsyncMailbox mailbox(socket);
+  Address from;
+  Address to;
+  std::string reply;
+  while (true) {
+    if (ReceiveMessage(mailbox, from, to, reply)) {
+      Info() << to << " < " << from << ' ' << reply << std::endl;
+    }
+  }
+  return 0;
+}
+
+int ListCommand(std::map<std::string, std::string> options,
+                std::vector<std::string> parameters) {
+  Address address(Localhost, 0);
+
+  // Parse Options
+  for (const auto& [k, v] : options) {
+    if (k == "-a") {
+      std::stringstream ss(v);
+      ss >> address;
+    } else {
+      Error() << "Option " << k << ":" << v << " not supported" << std::endl;
+    }
+  }
+
+  Address destination(Localhost, ServerPort);
+  switch (parameters.size()) {
+    case 0:
+      break;
+    case 1: {
+      const auto s{parameters.at(0)};
+      std::istringstream ss(s);
+      ss >> destination;
+    } break;
+    default:
+      Error() << "Too many parameters" << std::endl;
+      return -1;
+  }
+
+  UDPSocket socket(address);
+  AsyncMailbox mailbox(socket);
+  return ListMachines(mailbox, destination);
+}
+
+};  // namespace Wink
+
 int main(int argc, char** argv) {
   if (argc <= 0) {
-    Usage();
+    Wink::Usage();
     return 0;
   }
   std::string name(argv[0]);
   if (argc == 1) {
-    Usage(name);
+    Wink::Usage(name);
     return 0;
   }
 
@@ -142,213 +350,34 @@ int main(int argc, char** argv) {
 
   std::map<std::string, std::string> options;
   std::vector<std::string> parameters;
-  for (int i = 2; i < argc; ++i) {
+  for (int i{2}; i < argc; ++i) {
     if (argv[i][0] == '-' && i + 1 < argc) {
       options.insert(
           std::make_pair(std::string(argv[i]), std::string(argv[i + 1])));
-      i++;
+      ++i;
     } else {
       parameters.push_back(std::string(argv[i]));
     }
   }
 
   if (command == "start") {
-    Address address(kLocalhost, 0);
-    bool follow = false;
-
-    // Parse Options
-    for (const auto& [k, v] : options) {
-      if (k == "-a") {
-        std::stringstream ss(v);
-        ss >> address;
-      } else if (k == "-f") {
-        std::stringstream ss(v);
-        std::string f;
-        ss >> f;
-        std::transform(f.begin(), f.end(), f.begin(), ::tolower);
-        follow = (f == "1" || f == "true");
-      } else {
-        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
-      }
-    }
-
-    Address destination(kLocalhost, 0);
-    std::vector<std::string> args;
-    auto count = parameters.size();
-    if (count == 0) {
-      Error() << "Missing <binary> parameter" << std::endl;
-      return -1;
-    }
-    std::string binary(parameters.at(0));
-    if (count > 1) {
-      destination.FromString(parameters.at(1));
-      for (uint32_t i = 2; i < count; i++) {
-        args.push_back(parameters.at(i));
-      }
-    }
-
-    UDPSocket socket(address);
-    AsyncMailbox mailbox(socket);
-    return StartMachine(mailbox, address, binary, destination, args, follow);
+    Wink::StartCommand(options, parameters);
   } else if (command == "stop") {
-    Address address(kLocalhost, 0);
-
-    // Parse Options
-    for (const auto& [k, v] : options) {
-      if (k == "-a") {
-        std::stringstream ss(v);
-        ss >> address;
-      } else {
-        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
-      }
-    }
-
-    Address destination(kLocalhost, 0);
-    switch (parameters.size()) {
-      case 0:
-        Error() << "Missing <machine> parameter" << std::endl;
-        return -1;
-      case 1: {
-        std::istringstream ss(parameters.at(0));
-        ss >> destination;
-      } break;
-      default:
-        Error() << "Too many parameters" << std::endl;
-        return -1;
-    }
-
-    UDPSocket socket(address);
-    AsyncMailbox mailbox(socket);
-    return StopMachine(mailbox, destination);
+    Wink::StopCommand(options, parameters);
   } else if (command == "send") {
-    Address address(kLocalhost, 0);
-    uint32_t replies = 0;
-    // Parse Options
-    for (const auto& [k, v] : options) {
-      if (k == "-a") {
-        std::stringstream ss(v);
-        ss >> address;
-      } else if (k == "-r") {
-        std::stringstream ss(v);
-        ss >> replies;
-      } else {
-        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
-      }
-    }
-
-    Address destination(kLocalhost, 0);
-    std::vector<std::string> messages;
-    switch (parameters.size()) {
-      case 0:
-        Error() << "Missing <machine> parameter" << std::endl;
-        return -1;
-      case 1:
-        Error() << "Missing <message> parameter" << std::endl;
-        return -1;
-      default: {
-        const auto s = parameters.at(0);
-        std::istringstream ss(s);
-        ss >> destination;
-        messages.assign(parameters.begin() + 1, parameters.end());
-      } break;
-    }
-
-    UDPSocket socket(address);
-    AsyncMailbox mailbox(socket);
-    SendMessages(mailbox, destination, messages);
-
-    Address from;
-    Address to;
-    std::string reply;
-    for (uint32_t r = 0; r < replies;) {
-      if (ReceiveMessage(mailbox, from, to, reply)) {
-        Info() << to << " < " << from << ' ' << reply << std::endl;
-        r++;
-      }
-    }
-    return 0;
+    Wink::SendCommand(options, parameters);
   } else if (command == "listen") {
-    Address address(kLocalhost, 0);
-
-    // Parse Options
-    for (const auto& [k, v] : options) {
-      if (k == "-a") {
-        std::stringstream ss(v);
-        ss >> address;
-      } else {
-        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
-      }
-    }
-
-    UDPSocket socket(address);
-    switch (parameters.size()) {
-      case 0:
-        Error() << "Missing <group> parameter" << std::endl;
-        return -1;
-      default: {
-        for (const auto& s : parameters) {
-          Address group;
-          std::istringstream ss(s);
-          ss >> group;
-          if (group.IsMulticast()) {
-            socket.JoinGroup(group);
-          } else {
-            Error() << "Address " << group << " is not a multicast group"
-                    << std::endl;
-            return -1;
-          }
-        }
-      } break;
-    }
-
-    AsyncMailbox mailbox(socket);
-    Address from;
-    Address to;
-    std::string reply;
-    while (true) {
-      if (ReceiveMessage(mailbox, from, to, reply)) {
-        Info() << to << " < " << from << ' ' << reply << std::endl;
-      }
-    }
-    return 0;
+    Wink::ListenCommand(options, parameters);
   } else if (command == "list") {
-    Address address(kLocalhost, 0);
-
-    // Parse Options
-    for (const auto& [k, v] : options) {
-      if (k == "-a") {
-        std::stringstream ss(v);
-        ss >> address;
-      } else {
-        Error() << "Option " << k << ":" << v << " not supported" << std::endl;
-      }
-    }
-
-    Address destination(kLocalhost, kServerPort);
-    switch (parameters.size()) {
-      case 0:
-        break;
-      case 1: {
-        const auto s = parameters.at(0);
-        std::istringstream ss(s);
-        ss >> destination;
-      } break;
-      default:
-        Error() << "Too many parameters" << std::endl;
-        return -1;
-    }
-
-    UDPSocket socket(address);
-    AsyncMailbox mailbox(socket);
-    return ListMachines(mailbox, destination);
+    Wink::ListCommand(options, parameters);
   } else if (command == "help") {
     if (argc < 3) {
-      Usage();
+      Wink::Usage();
     } else {
-      Help(name, std::string(argv[2]));
+      Wink::Help(name, std::string(argv[2]));
     }
   } else {
-    Usage(name);
+    Wink::Usage(name);
   }
   return 0;
 }

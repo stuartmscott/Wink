@@ -41,7 +41,7 @@ include(FetchContent)
 FetchContent_Declare(
   GoogleTest
   GIT_REPOSITORY https://github.com/google/googletest.git
-  GIT_TAG        52eb8108c5bdec04579160ae17225d66034bd723 # release-1.17.0
+  GIT_TAG        063de7e9578f82b369302001269680b4b1553359 # release-1.18.0
 )
 set(INSTALL_GTEST OFF CACHE BOOL "Enable installation of googletest." FORCE)
 FetchContent_MakeAvailable(GoogleTest)

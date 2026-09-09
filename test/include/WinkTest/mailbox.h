@@ -10,6 +10,8 @@
 #include <string>
 #include <vector>
 
+namespace Wink::Test {
+
 typedef bool ReceiveArgs;
 
 struct ReceiveResult {
@@ -43,10 +45,12 @@ class MockMailbox : public Mailbox {
   std::vector<ReceiveResult> receiveResults_;
   std::vector<SendArgs> sendArgs_;
   std::vector<SendResult> sendResults_;
-  bool flushed_ = true;
+  bool flushed_{true};
 };
 
 void setup_default_mailbox(MockMailbox& mailbox);
 void assert_default_mailbox(MockMailbox& mailbox, Address& parent);
+
+};  // namespace Wink::Test
 
 #endif  // TEST_INCLUDE_WINKTEST_MAILBOX_H_

@@ -62,6 +62,8 @@ If the optional empty receiver exists, it is triggered if no other receivers mat
 #include <Wink/socket.h>
 #include <Wink/state.h>
 
+using namespace Wink;
+
 int main(int argc, char **argv) {
   if (argc < 4) {
     error() << "Incorrect parameters, expected <name> <address> <parent>"
@@ -145,6 +147,8 @@ When a parent is notified that a child has errored, it can chose to do nothing, 
 #include <Wink/socket.h>
 #include <Wink/state.h>
 
+using namespace Wink;
+
 int main(int argc, char **argv) {
   if (argc < 4) {
     error() << "Incorrect parameters, expected <name> <address> <parent>"
@@ -224,6 +228,8 @@ int main(int argc, char **argv) {
 #include <Wink/socket.h>
 #include <Wink/state.h>
 
+using namespace Wink;
+
 int main(int argc, char **argv) {
   if (argc < 4) {
     error() << "Incorrect parameters, expected <name> <address> <parent>"
@@ -292,14 +298,14 @@ Each Machine has a Mailbox through which Messages are sent and received.
 
 Messages are transmitted asynchronously over UDP which is fast, but unreliable - providing no guarantees that a message is delivered.
 
-Mailboxes implement an acknowledgement and retry mechanism to increase the reliability of message passing - recipients respond with an acknowledgement upon receipt of a message, and senders will retry unacknowledged messages up to 5 times.
+Mailboxes implement an acknowledgement and retry mechanism to increase the reliability of message passing - recipients respond with an acknowledgement upon receipt of a message, and senders will retry unacknowledged messages up to 10 times.
 
 Mailboxes maintain a send/receive pair of sequence counters for each recipient. The send sequence number is included in each outgoing message, and incremented afterwards. The receive sequence number is used to detect duplicate messages.
 
 Consider the scenario:
 - Machine A sends Message M to Machine B.
 - If B receives M, it responds with Acknowledgement K containing M's sequence number.
-- If A does not receive K within 10 seconds, it will resend M, up to 5 times.
+- If A does not receive K within 10 seconds, it will resend M, up to 10 times.
 - If B receives M and sends K, but A does not receive K it will resend M. B will ignore the duplicate M, but will resend K.
 
 ## Repository Layout

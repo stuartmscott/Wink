@@ -10,6 +10,8 @@
 #include <string>
 #include <thread>
 
+using namespace Wink;
+
 int main(int argc, char** argv) {
   if (argc < 5) {
     Error() << "Incorrect parameters, expected <name> <address> <parent> "
@@ -27,7 +29,7 @@ int main(int argc, char** argv) {
 
   const std::chrono::seconds interval(std::stoi(argv[4]));
 
-  std::atomic_bool running = true;
+  std::atomic_bool running{true};
 
   std::thread worker([&]() {
     while (running) {

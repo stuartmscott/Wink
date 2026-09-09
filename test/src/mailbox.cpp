@@ -6,13 +6,15 @@
 #include <cstring>
 #include <string>
 
+namespace Wink::Test {
+
 bool MockMailbox::Receive(Address& from, Address& to, std::string& message) {
-  const auto index = receiveArgs_.size();
+  const auto index{receiveArgs_.size()};
   receiveArgs_.push_back(true);
   if (index >= receiveResults_.size()) {
     Error() << "Unexpected call to Receive" << std::endl;
   }
-  const auto result = receiveResults_.at(index);
+  const auto result{receiveResults_.at(index)};
   from.set_ip(result.fromIP);
   from.set_port(result.fromPort);
   to.set_ip(result.toIP);
@@ -22,7 +24,7 @@ bool MockMailbox::Receive(Address& from, Address& to, std::string& message) {
 }
 
 void MockMailbox::Send(const Address& to, const std::string& message) {
-  const auto index = sendArgs_.size();
+  const auto index{sendArgs_.size()};
   SendArgs args;
   args.toIP = to.ip();
   args.toPort = to.port();
@@ -36,7 +38,7 @@ void MockMailbox::Send(const Address& to, const std::string& message) {
 void setup_default_mailbox(MockMailbox& mailbox) {
   // Set mock send result
   {
-    SendResult result = true;
+    SendResult result{true};
     mailbox.sendResults_.push_back(result);
     mailbox.sendResults_.push_back(result);
     mailbox.sendResults_.push_back(result);
@@ -45,14 +47,14 @@ void setup_default_mailbox(MockMailbox& mailbox) {
   // Set mock receive result
   {
     ReceiveResult result;
-    result.fromIP = kTestUnicastIP;
-    result.fromPort = kTestPort;
-    result.toIP = kTestUnicastIP;
-    result.toPort = kTestPort;
+    result.fromIP = TestUnicastIP;
+    result.fromPort = TestPort;
+    result.toIP = TestUnicastIP;
+    result.toPort = TestPort;
     result.result = true;
     std::ostringstream oss;
     oss << "started ";
-    oss << kTestBinary;
+    oss << TestBinary;
     result.message = oss.str();
     mailbox.receiveResults_.push_back(result);
   }
@@ -64,31 +66,33 @@ void assert_default_mailbox(MockMailbox& mailbox, Address& parent) {
     ASSERT_EQ(4, mailbox.sendArgs_.size());
     // Send Started Message to Spawner
     {
-      const auto arg0 = mailbox.sendArgs_.at(0);
+      const auto arg0{mailbox.sendArgs_.at(0)};
       ASSERT_EQ(parent.ip(), arg0.toIP);
       ASSERT_EQ(parent.port(), arg0.toPort);
       ASSERT_EQ(std::string("started test/Test"), arg0.message);
     }
     // Register Machine
     {
-      const auto arg1 = mailbox.sendArgs_.at(1);
-      ASSERT_EQ(kLocalhost, arg1.toIP);
-      ASSERT_EQ(kServerPort, arg1.toPort);
+      const auto arg1{mailbox.sendArgs_.at(1)};
+      ASSERT_EQ(Localhost, arg1.toIP);
+      ASSERT_EQ(ServerPort, arg1.toPort);
       ASSERT_TRUE(arg1.message.starts_with("register test/Test "));
     }
     // Send Exited Message to Spawner
     {
-      const auto arg2 = mailbox.sendArgs_.at(2);
+      const auto arg2{mailbox.sendArgs_.at(2)};
       ASSERT_EQ(parent.ip(), arg2.toIP);
       ASSERT_EQ(parent.port(), arg2.toPort);
       ASSERT_EQ(std::string("exited test/Test"), arg2.message);
     }
     // Unregister Machine
     {
-      const auto arg3 = mailbox.sendArgs_.at(3);
-      ASSERT_EQ(kLocalhost, arg3.toIP);
-      ASSERT_EQ(kServerPort, arg3.toPort);
+      const auto arg3{mailbox.sendArgs_.at(3)};
+      ASSERT_EQ(Localhost, arg3.toIP);
+      ASSERT_EQ(ServerPort, arg3.toPort);
       ASSERT_EQ(std::string("unregister"), arg3.message);
     }
   }
 }
+
+};  // namespace Wink::Test

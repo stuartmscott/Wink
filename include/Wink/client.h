@@ -14,6 +14,8 @@
 #include <string>
 #include <vector>
 
+namespace Wink {
+
 int StartMachine(Mailbox& mailbox, const Address address,
                  const std::string name, Address& destination,
                  const std::vector<std::string> args,
@@ -25,5 +27,7 @@ void SendMessages(Mailbox& mailbox, const Address to,
 bool ReceiveMessage(Mailbox& mailbox, Address& from, Address& to,
                     std::string& message);
 int ListMachines(Mailbox& mailbox, const Address server);
+
+};  // namespace Wink
 
 #endif  // INCLUDE_WINK_CLIENT_H_

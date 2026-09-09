@@ -20,7 +20,9 @@
 #include <utility>
 #include <vector>
 
-static std::atomic_bool got_sigterm = false;
+namespace Wink {
+
+static std::atomic_bool got_sigterm{false};
 void SignalHandler(int signal);
 
 class Machine {
@@ -34,6 +36,10 @@ class Machine {
   Machine& operator=(const Machine& m) = delete;
   Machine& operator=(Machine&& m) = delete;
   ~Machine() {}
+  /**
+   * Returns this Machine's Name.
+   */
+  std::string Name() const { return name_; }
   /**
    * Returns this Machine's Unique Identifier.
    */
@@ -111,15 +117,15 @@ class Machine {
   void UnregisterMachine();
   std::vector<std::string> StateLineage(const std::string& state);
 
-  std::string name_ = "";
+  std::string name_;
   Mailbox& mailbox_;
   Address& address_;
   Address& parent_;
-  std::string uid_ = "";
-  std::atomic_bool running_ = true;
+  std::string uid_;
+  std::atomic_bool running_{true};
   std::map<const std::string, State> states_;
-  std::string current_ = "";
-  std::string error_message_ = "";
+  std::string current_;
+  std::string error_message_;
   struct ScheduledMessage {
     const Address& address;
     const std::string message;
@@ -134,5 +140,7 @@ class Machine {
 void PruneLineage(std::vector<std::string>&, std::vector<std::string>&);
 
 std::pair<std::string, std::string> ParseMachineName(const std::string& name);
+
+};  // namespace Wink
 
 #endif  // INCLUDE_WINK_MACHINE_H_

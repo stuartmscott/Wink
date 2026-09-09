@@ -12,12 +12,14 @@
 #include <sstream>
 #include <string>
 
+namespace Wink {
+
 std::string Resolve(const std::string ip);
 
 class Address {
  public:
   Address() {
-    set_ip(kLocalhost);
+    set_ip(Localhost);
     set_port(0);
   }
   explicit Address(std::string address) { FromString(address); }
@@ -80,12 +82,14 @@ class Address {
   bool operator!=(const Address& other) const { return !(*this == other); }
 
  private:
-  std::string ip_ = kLocalhost;
-  std::string resolved_ = kLocalhost;
-  uint16_t port_ = 0;
+  std::string ip_{Localhost};
+  std::string resolved_{Localhost};
+  uint16_t port_{0};
 };
 
 std::istream& operator>>(std::istream& is, Address& address);
 std::ostream& operator<<(std::ostream& os, const Address& address);
+
+};  // namespace Wink
 
 #endif  // INCLUDE_WINK_ADDRESS_H_

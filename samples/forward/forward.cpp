@@ -9,6 +9,8 @@
 #include <iostream>
 #include <string>
 
+using namespace Wink;
+
 int main(int argc, char** argv) {
   if (argc < 5) {
     Error() << "Incorrect parameters, expected <name> <address> <parent> "

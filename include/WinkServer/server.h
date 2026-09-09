@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+namespace Wink::Server {
+
 class Server {
  public:
   explicit Server(Address& address, Mailbox& mailbox,
@@ -43,12 +45,14 @@ class Server {
  private:
   Address& address_;
   Mailbox& mailbox_;
-  const std::string log_ = "";
-  std::atomic_bool running_ = true;
+  const std::string log_;
+  std::atomic_bool running_{true};
   // Map port number to machine file
   std::map<uint16_t, std::string> machines_;
   // Map port number to process identifier
   std::map<uint16_t, pid_t> pids_;
 };
+
+};  // namespace Wink::Server
 
 #endif  // INCLUDE_WINKSERVER_SERVER_H_
