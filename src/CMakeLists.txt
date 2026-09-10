@@ -67,7 +67,7 @@ set(SERVER_LIBRARY_NAME libWinkServer)
 add_library(${SERVER_LIBRARY_NAME})
 
 target_link_libraries(${SERVER_LIBRARY_NAME}
-  PRIVATE
+  PUBLIC
     ${LIBRARY_NAME}
 )
 
