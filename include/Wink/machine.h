@@ -27,7 +27,8 @@ void SignalHandler(int signal);
 
 class Machine {
  public:
-  Machine(std::string name, Mailbox& mailbox, Address& address, Address& parent)
+  Machine(const std::string name, Mailbox& mailbox, Address& address,
+          const Address& parent)
       : name_(name), mailbox_(mailbox), address_(address), parent_(parent) {
     std::signal(SIGTERM, SignalHandler);
   }
@@ -117,10 +118,10 @@ class Machine {
   void UnregisterMachine();
   std::vector<std::string> StateLineage(const std::string& state);
 
-  std::string name_;
+  const std::string name_;
   Mailbox& mailbox_;
   Address& address_;
-  Address& parent_;
+  const Address& parent_;
   std::string uid_;
   std::atomic_bool running_{true};
   std::map<const std::string, State> states_;
