@@ -62,4 +62,22 @@ TEST(AddressTest, Stream) {
   ASSERT_EQ(TestPort, a2.port());
 }
 
+TEST(AddressTest, Equal) {
+  Address a1(Localhost, TestPort);
+  Address a2(Localhost, TestPort);
+  ASSERT_EQ(a1, a2);
+}
+
+TEST(AddressTest, Equal_Resolved) {
+  Address a1(Localhost, TestPort);
+  Address a2("localhost", TestPort);
+  ASSERT_EQ(a1, a2);
+}
+
+TEST(AddressTest, Not_Equal) {
+  Address a1(Localhost, TestPort);
+  Address a2(Localhost, 42434);
+  ASSERT_NE(a1, a2);
+}
+
 };  // namespace Wink::Test

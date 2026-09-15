@@ -111,6 +111,8 @@ void Machine::AddState(State state) {
 }
 
 void Machine::Transition(const std::string& state) {
+  // TODO error is state does not exist
+
   Info() << uid_;
   if (current_.empty()) {
     Info() << " transitioned to ";

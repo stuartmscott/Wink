@@ -70,8 +70,8 @@ class Address {
   }
 
   bool operator==(const Address& other) const {
-    if (port_ == other.port_) {
-      return true;
+    if (port_ != other.port_) {
+      return false;
     }
     if (ip_ == other.ip_) {
       return true;
