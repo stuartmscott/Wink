@@ -39,8 +39,9 @@ int LogToFile(const std::string& directory, const std::string& name) {
   const auto tm{*std::gmtime(&tt)};
 
   std::ostringstream filename;
-  filename << std::put_time(&tm, "%Y%m%d%H%M%S");
   filename << name;
+  filename << '.';
+  filename << std::put_time(&tm, "%Y%m%d%H%M%S");
   filename << ".log";
   std::filesystem::path filepath(directory);
   filepath /= filename.str();
