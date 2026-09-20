@@ -164,7 +164,7 @@ void Machine::SendAt(const Address& to, const std::string& message,
 }
 
 void Machine::SendAfter(const Address& to, const std::string& message,
-                        const std::chrono::seconds delay) {
+                        const std::chrono::milliseconds delay) {
   auto time{std::chrono::system_clock::now()};
   time += delay;
   SendAt(to, message, time);

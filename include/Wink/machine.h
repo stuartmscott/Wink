@@ -9,6 +9,7 @@
 #include <Wink/state.h>
 #include <unistd.h>
 
+#include <chrono>
 #include <csignal>
 #include <fstream>
 #include <functional>
@@ -86,7 +87,7 @@ class Machine {
    * Sends the given address the message after the given delay.
    */
   void SendAfter(const Address& to, const std::string& message,
-                 const std::chrono::seconds delay);
+                 const std::chrono::milliseconds delay);
   /**
    * Spawns a new state machine.
    */
