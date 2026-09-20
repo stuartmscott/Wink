@@ -12,8 +12,8 @@ TEST(AddressTest, ReadFrom) {
   a.sin_port = htons(TestPort);
   Address address;
   address.ReadFrom(a);
-  ASSERT_EQ(Localhost, address.ip());
-  ASSERT_EQ(TestPort, address.port());
+  ASSERT_EQ(Localhost, address.GetIP());
+  ASSERT_EQ(TestPort, address.GetPort());
 }
 
 TEST(AddressTest, WriteTo) {
@@ -58,8 +58,8 @@ TEST(AddressTest, Stream) {
   std::istringstream iss(oss.str());
   iss >> a2;
 
-  ASSERT_EQ(Localhost, a2.ip());
-  ASSERT_EQ(TestPort, a2.port());
+  ASSERT_EQ(Localhost, a2.GetIP());
+  ASSERT_EQ(TestPort, a2.GetPort());
 }
 
 TEST(AddressTest, Equal) {

@@ -50,8 +50,8 @@ TEST(ClientTest, StartMachine) {
   }
 
   // Check destination address
-  ASSERT_EQ(TestUnicastIP, destination.ip());
-  ASSERT_EQ(TestPort, destination.port());
+  ASSERT_EQ(TestUnicastIP, destination.GetIP());
+  ASSERT_EQ(TestPort, destination.GetPort());
 }
 
 TEST(ClientTest, StopMachine) {
@@ -116,10 +116,10 @@ TEST(ClientTest, ReceiveMessage) {
 
   // Check mailbox receive
   ASSERT_EQ(1, mailbox.receiveArgs_.size());
-  ASSERT_EQ(TestUnicastIP, from.ip());
-  ASSERT_EQ(TestPort, from.port());
-  ASSERT_EQ(TestUnicastIP, to.ip());
-  ASSERT_EQ(TestPort, to.port());
+  ASSERT_EQ(TestUnicastIP, from.GetIP());
+  ASSERT_EQ(TestPort, from.GetPort());
+  ASSERT_EQ(TestUnicastIP, to.GetIP());
+  ASSERT_EQ(TestPort, to.GetPort());
   ASSERT_EQ(TestMessage, message);
 }
 
@@ -158,8 +158,8 @@ TEST(ClientTest, ListMachines) {
   }
 
   // Check destination address
-  ASSERT_EQ(TestUnicastIP, destination.ip());
-  ASSERT_EQ(ServerPort, destination.port());
+  ASSERT_EQ(TestUnicastIP, destination.GetIP());
+  ASSERT_EQ(ServerPort, destination.GetPort());
 }
 
 };  // namespace Wink::Test

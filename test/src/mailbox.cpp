@@ -15,10 +15,10 @@ bool MockMailbox::Receive(Address& from, Address& to, std::string& message) {
     Error() << "Unexpected call to Receive" << std::endl;
   }
   const auto result{receiveResults_.at(index)};
-  from.set_ip(result.fromIP);
-  from.set_port(result.fromPort);
-  to.set_ip(result.toIP);
-  to.set_port(result.toPort);
+  from.SetIP(result.fromIP);
+  from.SetPort(result.fromPort);
+  to.SetIP(result.toIP);
+  to.SetPort(result.toPort);
   message = result.message;
   return result.result;
 }
@@ -26,8 +26,8 @@ bool MockMailbox::Receive(Address& from, Address& to, std::string& message) {
 void MockMailbox::Send(const Address& to, const std::string& message) {
   const auto index{sendArgs_.size()};
   SendArgs args;
-  args.toIP = to.ip();
-  args.toPort = to.port();
+  args.toIP = to.GetIP();
+  args.toPort = to.GetPort();
   args.message = message;
   sendArgs_.push_back(args);
   if (index >= sendResults_.size()) {
@@ -67,8 +67,8 @@ void assert_default_mailbox(MockMailbox& mailbox, Address& parent) {
     // Send Started Message to Spawner
     {
       const auto arg0{mailbox.sendArgs_.at(0)};
-      ASSERT_EQ(parent.ip(), arg0.toIP);
-      ASSERT_EQ(parent.port(), arg0.toPort);
+      ASSERT_EQ(parent.GetIP(), arg0.toIP);
+      ASSERT_EQ(parent.GetPort(), arg0.toPort);
       ASSERT_EQ(std::string("started test/Test"), arg0.message);
     }
     // Register Machine
@@ -81,8 +81,8 @@ void assert_default_mailbox(MockMailbox& mailbox, Address& parent) {
     // Send Exited Message to Spawner
     {
       const auto arg2{mailbox.sendArgs_.at(2)};
-      ASSERT_EQ(parent.ip(), arg2.toIP);
-      ASSERT_EQ(parent.port(), arg2.toPort);
+      ASSERT_EQ(parent.GetIP(), arg2.toIP);
+      ASSERT_EQ(parent.GetPort(), arg2.toPort);
       ASSERT_EQ(std::string("exited test/Test"), arg2.message);
     }
     // Unregister Machine

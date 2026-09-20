@@ -124,7 +124,7 @@ bool UDPSocket::Send(const Address& to, const char* buffer,
 
 bool UDPSocket::JoinGroup(const Address& group) {
   if (!group.IsMulticast()) {
-    Error() << "IP is not a multicast group: " << group.ip() << std::endl;
+    Error() << "IP is not a multicast group: " << group.GetIP() << std::endl;
     return false;
   }
 
@@ -148,14 +148,14 @@ bool UDPSocket::JoinGroup(const Address& group) {
   // Bind multicast socket
   sockaddr_in multicast_address = {};
   multicast_address.sin_family = AF_INET;
-  multicast_address.sin_port = htons(group.port());
+  multicast_address.sin_port = htons(group.GetPort());
   multicast_address.sin_addr.s_addr = INADDR_ANY;
   if (const auto result =
           bind(multicast_socket, (struct sockaddr*)&multicast_address,
                sizeof(struct sockaddr_in));
       result < 0) {
-    Error() << "Failed to bind UDP multicast socket to 0.0.0.0:" << group.port()
-            << ": " << std::strerror(errno) << std::endl;
+    Error() << "Failed to bind UDP multicast socket to 0.0.0.0:"
+            << group.GetPort() << ": " << std::strerror(errno) << std::endl;
     close(multicast_socket);
     return false;
   }

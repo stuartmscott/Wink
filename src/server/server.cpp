@@ -40,11 +40,11 @@ int Server::Serve(const std::string& directory) {
       if (iss.good()) {
         iss >> destination;
       }
-      destination.set_ip(address_.ip());
+      destination.SetIP(address_.GetIP());
 
       // TODO handle in worker threat
       {
-        if (const auto port{destination.port()}; port > 0) {
+        if (const auto port{destination.GetPort()}; port > 0) {
           // Stop existing machine on requested port (if any).
           Stop(port);
         }
@@ -103,18 +103,18 @@ int Server::Serve(const std::string& directory) {
       iss >> pid;
       // TODO secure with mutex
       {
-        machines_.emplace(from.port(), machine);
-        pids_.emplace(from.port(), pid);
+        machines_.emplace(from.GetPort(), machine);
+        pids_.emplace(from.GetPort(), pid);
       }
     } else if (command == "unregister") {
       // TODO secure with mutex
       {
-        if (const auto it{pids_.find(from.port())}; it != pids_.end()) {
+        if (const auto it{pids_.find(from.GetPort())}; it != pids_.end()) {
           // remove port from machines and pids maps
-          machines_.erase(from.port());
-          pids_.erase(from.port());
+          machines_.erase(from.GetPort());
+          pids_.erase(from.GetPort());
         } else {
-          Error() << "Unrecognized port " << from.port() << std::endl;
+          Error() << "Unrecognized port " << from.GetPort() << std::endl;
         }
       }
     } else if (command == "list") {

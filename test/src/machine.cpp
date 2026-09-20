@@ -186,8 +186,8 @@ TEST(MachineTest, Exit) {
   ASSERT_EQ(4, mailbox.sendArgs_.size());
   // Send Started Message to Spawner
   const auto arg0{mailbox.sendArgs_.at(0)};
-  ASSERT_EQ(parent.ip(), arg0.toIP);
-  ASSERT_EQ(parent.port(), arg0.toPort);
+  ASSERT_EQ(parent.GetIP(), arg0.toIP);
+  ASSERT_EQ(parent.GetPort(), arg0.toPort);
   ASSERT_EQ(std::string("started test/Test"), arg0.message);
   // Register Machine
   const auto arg1{mailbox.sendArgs_.at(1)};
@@ -196,8 +196,8 @@ TEST(MachineTest, Exit) {
   ASSERT_TRUE(arg1.message.starts_with("register test/Test "));
   // Send Exited Message to Spawner
   const auto arg2{mailbox.sendArgs_.at(2)};
-  ASSERT_EQ(parent.ip(), arg2.toIP);
-  ASSERT_EQ(parent.port(), arg2.toPort);
+  ASSERT_EQ(parent.GetIP(), arg2.toIP);
+  ASSERT_EQ(parent.GetPort(), arg2.toPort);
   ASSERT_EQ(std::string("exited test/Test"), arg2.message);
   // Unregister Machine
   const auto arg3{mailbox.sendArgs_.at(3)};
@@ -230,8 +230,8 @@ TEST(MachineTest, Error) {
   ASSERT_EQ(5, mailbox.sendArgs_.size());
   // Send Started Message to Spawner
   const auto arg0{mailbox.sendArgs_.at(0)};
-  ASSERT_EQ(parent.ip(), arg0.toIP);
-  ASSERT_EQ(parent.port(), arg0.toPort);
+  ASSERT_EQ(parent.GetIP(), arg0.toIP);
+  ASSERT_EQ(parent.GetPort(), arg0.toPort);
   ASSERT_EQ(std::string("started test/Test"), arg0.message);
   // Register Machine
   const auto arg1{mailbox.sendArgs_.at(1)};
@@ -240,13 +240,13 @@ TEST(MachineTest, Error) {
   ASSERT_TRUE(arg1.message.starts_with("register test/Test "));
   // Send Errored Message to Spawner
   const auto arg2{mailbox.sendArgs_.at(2)};
-  ASSERT_EQ(parent.ip(), arg2.toIP);
-  ASSERT_EQ(parent.port(), arg2.toPort);
+  ASSERT_EQ(parent.GetIP(), arg2.toIP);
+  ASSERT_EQ(parent.GetPort(), arg2.toPort);
   ASSERT_EQ(std::string("errored test/Test AHHHH"), arg2.message);
   // Send Exited Message to Spawner
   const auto arg3{mailbox.sendArgs_.at(3)};
-  ASSERT_EQ(parent.ip(), arg3.toIP);
-  ASSERT_EQ(parent.port(), arg3.toPort);
+  ASSERT_EQ(parent.GetIP(), arg3.toIP);
+  ASSERT_EQ(parent.GetPort(), arg3.toPort);
   ASSERT_EQ(std::string("exited test/Test"), arg3.message);
   // Unregister Machine
   const auto arg4{mailbox.sendArgs_.at(4)};
@@ -453,8 +453,8 @@ TEST(MachineTest, Send) {
   // Check mailbox send
   ASSERT_EQ(1, mailbox.sendArgs_.size());
   const auto arg{mailbox.sendArgs_.at(0)};
-  ASSERT_EQ(destination.ip(), arg.toIP);
-  ASSERT_EQ(destination.port(), arg.toPort);
+  ASSERT_EQ(destination.GetIP(), arg.toIP);
+  ASSERT_EQ(destination.GetPort(), arg.toPort);
   ASSERT_EQ(std::string(TestMessage), arg.message);
 }
 

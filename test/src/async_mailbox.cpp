@@ -108,7 +108,7 @@ TEST(AsyncMailboxTest, UnicastAcknowledgement) {
     Address to;
     std::string message;
     ASSERT_TRUE(receiver_mailbox.Receive(from, to, message));
-    ASSERT_EQ(sender_address.ip(), from.ip());
+    ASSERT_EQ(sender_address.GetIP(), from.GetIP());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(TestMessage, message);
   }
@@ -119,7 +119,7 @@ TEST(AsyncMailboxTest, UnicastAcknowledgement) {
     char buffer[MaxTestPayload];
     size_t length;
     receiver_socket.Await(to, buffer, length);
-    ASSERT_EQ(sender_address.ip(), to.ip());
+    ASSERT_EQ(sender_address.GetIP(), to.GetIP());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(TestAckLength, length);
     ASSERT_ARRAY_EQ(length, TestAck, buffer);
@@ -179,7 +179,7 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedMessage) {
     Address to;
     std::string message;
     ASSERT_TRUE(receiver_mailbox.Receive(from, to, message));
-    ASSERT_EQ(sender_address.ip(), from.ip());
+    ASSERT_EQ(sender_address.GetIP(), from.GetIP());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(receiver_address, to);
     ASSERT_EQ(TestMessage, message);
@@ -191,7 +191,7 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedMessage) {
     char buffer[MaxTestPayload];
     size_t length;
     receiver_socket.Await(to, buffer, length);
-    ASSERT_EQ(sender_address.ip(), to.ip());
+    ASSERT_EQ(sender_address.GetIP(), to.GetIP());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(TestAckLength, length);
     ASSERT_ARRAY_EQ(length, TestAck, buffer);
@@ -238,7 +238,7 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedAck) {
     Address to;
     std::string message;
     ASSERT_TRUE(receiver_mailbox.Receive(from, to, message));
-    ASSERT_EQ(sender_address.ip(), from.ip());
+    ASSERT_EQ(sender_address.GetIP(), from.GetIP());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(receiver_address, to);
     ASSERT_EQ(TestMessage, message);
@@ -250,7 +250,7 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedAck) {
     char buffer[MaxTestPayload];
     size_t length;
     receiver_socket.Await(to, buffer, length);
-    ASSERT_EQ(sender_address.ip(), to.ip());
+    ASSERT_EQ(sender_address.GetIP(), to.GetIP());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(TestAckLength, length);
     ASSERT_ARRAY_EQ(length, TestAck, buffer);
@@ -286,7 +286,7 @@ TEST(AsyncMailboxTest, UnicastRetry_DroppedAck) {
     char buffer[MaxTestPayload];
     size_t length;
     receiver_socket.Await(to, buffer, length);
-    ASSERT_EQ(sender_address.ip(), to.ip());
+    ASSERT_EQ(sender_address.GetIP(), to.GetIP());
     // Sender's port is not bound, so dont assert value
     ASSERT_EQ(TestAckLength, length);
     ASSERT_ARRAY_EQ(length, TestAck, buffer);

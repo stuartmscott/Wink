@@ -10,12 +10,12 @@ int StartMachine(Mailbox& mailbox, const Address address,
                  const std::string machine, Address& destination,
                  const std::vector<std::string> args, const bool follow) {
   // Send Request
-  Address server(destination.ip(), ServerPort);
+  Address server(destination.GetIP(), ServerPort);
   std::ostringstream oss;
   oss << "start ";
   oss << machine;
   oss << " :";
-  oss << destination.port();
+  oss << destination.GetPort();
   for (const auto& a : args) {
     oss << ' ';
     oss << a;
@@ -69,10 +69,10 @@ int StartMachine(Mailbox& mailbox, const Address address,
 }
 
 int StopMachine(Mailbox& mailbox, const Address address) {
-  Address server(address.ip(), ServerPort);
+  Address server(address.GetIP(), ServerPort);
   std::ostringstream oss;
   oss << "stop ";
-  oss << address.port();
+  oss << address.GetPort();
   SendMessage(mailbox, server, oss.str());
   return 0;
 }

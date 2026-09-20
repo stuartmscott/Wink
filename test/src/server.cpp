@@ -44,7 +44,7 @@ TEST(ServerTest, Registration) {
   ASSERT_TRUE(client_mailbox.Receive(from, to, message));
   ASSERT_EQ(server_address, from);
   ASSERT_EQ(client_address, to);
-  ASSERT_EQ("Port,PID,Machine\n" + std::to_string(client_address.port()) +
+  ASSERT_EQ("Port,PID,Machine\n" + std::to_string(client_address.GetPort()) +
                 ",12345,useless/Useless",
             message);
 
@@ -94,8 +94,8 @@ TEST(ServerTest, StartListStop) {
 
   // Assert Machine Started
   ASSERT_TRUE(client_mailbox.Receive(from, to, message));
-  ASSERT_EQ(Localhost, from.ip());
-  ASSERT_EQ(TestPort, from.port());
+  ASSERT_EQ(Localhost, from.GetIP());
+  ASSERT_EQ(TestPort, from.GetPort());
   ASSERT_EQ(client_address, to);
   ASSERT_EQ("started time/After#foobar", message);
 

@@ -80,8 +80,8 @@ void Machine::Start(const std::string& initial) {
     Address address;
     std::istringstream iss(k);
     iss >> address;
-    Address server(address.ip(), ServerPort);
-    Send(server, "stop " + std::to_string(address.port()));
+    Address server(address.GetIP(), ServerPort);
+    Send(server, "stop " + std::to_string(address.GetPort()));
   }
 
   while (!mailbox_.Flushed()) {
@@ -177,7 +177,7 @@ void Machine::Spawn(const std::string& machine) {
 
 void Machine::Spawn(const std::string& machine,
                     const std::vector<std::string>& args) {
-  const Address destination(address_.ip(), 0);
+  const Address destination(address_.GetIP(), 0);
   Spawn(machine, destination, args);
 }
 
@@ -189,12 +189,12 @@ void Machine::Spawn(const std::string& machine, const Address& destination) {
 void Machine::Spawn(const std::string& machine, const Address& destination,
                     const std::vector<std::string>& args) {
   // Send Request
-  Address server(destination.ip(), ServerPort);
+  Address server(destination.GetIP(), ServerPort);
   std::ostringstream oss;
   oss << "start ";
   oss << machine;
   oss << " :";
-  oss << destination.port();
+  oss << destination.GetPort();
   for (const auto& a : args) {
     oss << ' ';
     oss << a;
@@ -328,12 +328,12 @@ void Machine::RegisterMachine(const std::string& machine, const int pid) {
   oss << machine;
   oss << ' ';
   oss << pid;
-  Address server(address_.ip(), ServerPort);
+  Address server(address_.GetIP(), ServerPort);
   Send(server, oss.str());
 }
 
 void Machine::UnregisterMachine() {
-  Address server(address_.ip(), ServerPort);
+  Address server(address_.GetIP(), ServerPort);
   Send(server, "unregister");
 }
 

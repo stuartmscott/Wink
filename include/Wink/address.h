@@ -19,30 +19,30 @@ std::string Resolve(const std::string ip);
 class Address {
  public:
   Address() {
-    set_ip(Localhost);
-    set_port(0);
+    SetIP(Localhost);
+    SetPort(0);
   }
   explicit Address(std::string address) { FromString(address); }
   Address(std::string ip, uint16_t port) {
-    set_ip(ip);
-    set_port(port);
+    SetIP(ip);
+    SetPort(port);
   }
   Address(const Address& address) {
-    set_ip(address.ip_);
-    set_port(address.port_);
+    SetIP(address.ip_);
+    SetPort(address.port_);
   }
   Address(Address&& address) {
-    set_ip(address.ip_);
-    set_port(address.port_);
+    SetIP(address.ip_);
+    SetPort(address.port_);
   }
   Address& operator=(const Address& address) {
-    set_ip(address.ip_);
-    set_port(address.port_);
+    SetIP(address.ip_);
+    SetPort(address.port_);
     return *this;
   }
   Address& operator=(Address&& address) {
-    set_ip(address.ip_);
-    set_port(address.port_);
+    SetIP(address.ip_);
+    SetPort(address.port_);
     return *this;
   }
   ~Address() {}
@@ -54,13 +54,13 @@ class Address {
   uint32_t ToInetAddr() const;
   bool IsMulticast() const;
 
-  void set_ip(std::string ip) {
+  void SetIP(std::string ip) {
     ip_ = ip;
     resolved_ = Resolve(ip_);
   }
-  void set_port(uint16_t port) { port_ = port; }
-  std::string ip() const { return ip_; }
-  uint16_t port() const { return port_; }
+  void SetPort(uint16_t port) { port_ = port; }
+  std::string GetIP() const { return ip_; }
+  uint16_t GetPort() const { return port_; }
 
   bool operator<(const Address& other) const {
     if (resolved_ == other.resolved_) {

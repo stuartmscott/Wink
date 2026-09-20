@@ -43,16 +43,16 @@ void Address::FromString(const std::string& address) {
   const auto index{address.find(':')};
   switch (index) {
     case std::string::npos:
-      set_ip(address);
-      set_port(0);
+      SetIP(address);
+      SetPort(0);
       break;
     case 0:
-      set_ip(Localhost);
-      set_port(std::stoul(address.substr(index + 1)));
+      SetIP(Localhost);
+      SetPort(std::stoul(address.substr(index + 1)));
       break;
     default:
-      set_ip(address.substr(0, index));
-      set_port(std::stoul(address.substr(index + 1)));
+      SetIP(address.substr(0, index));
+      SetPort(std::stoul(address.substr(index + 1)));
       break;
   }
 }
@@ -83,8 +83,8 @@ bool Address::IsMulticast() const {
 }
 
 void Address::ReadFrom(const struct sockaddr_in& address) {
-  set_ip(inet_ntoa(address.sin_addr));
-  set_port(ntohs(address.sin_port));
+  SetIP(inet_ntoa(address.sin_addr));
+  SetPort(ntohs(address.sin_port));
 }
 
 void Address::WriteTo(struct sockaddr_in& address) const {
@@ -104,7 +104,7 @@ std::istream& operator>>(std::istream& is, Address& address) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Address& address) {
-  os << address.ip() << ':' << address.port();
+  os << address.GetIP() << ':' << address.GetPort();
   return os;
 }
 
