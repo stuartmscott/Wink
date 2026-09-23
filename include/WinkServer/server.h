@@ -16,6 +16,7 @@
 #include <fstream>
 #include <iostream>
 #include <map>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -51,6 +52,8 @@ class Server {
   std::map<uint16_t, std::string> machines_;
   // Map port number to process identifier
   std::map<uint16_t, pid_t> pids_;
+  // Set addresses which have subscribed
+  std::set<Address> subscribers_;
 };
 
 };  // namespace Wink::Server

@@ -106,6 +106,17 @@ int Server::Serve(const std::string& directory) {
         machines_.emplace(from.GetPort(), machine);
         pids_.emplace(from.GetPort(), pid);
       }
+      // Notify subscribers
+      {
+        std::ostringstream oss;
+        oss << "machine ";
+        oss << machine;
+        oss << " :";
+        oss << from.GetPort();
+        for (const auto& subscriber : subscribers_) {
+          SendMessage(mailbox_, subscriber, oss.str());
+        }
+      }
     } else if (command == "unregister") {
       // TODO secure with mutex
       {
@@ -116,6 +127,23 @@ int Server::Serve(const std::string& directory) {
         } else {
           Error() << "Unrecognized port " << from.GetPort() << std::endl;
         }
+      }
+    } else if (command == "subscribe") {
+      if (subscribers_.insert(from).second) {
+        Info() << "Server: subscribed: " << from << std::endl;
+        for (const auto& [k, v] : machines_) {
+          std::ostringstream oss;
+          oss << "machine ";
+          oss << v;
+          oss << " :";
+          oss << k;
+          SendMessage(mailbox_, from, oss.str());
+        }
+      }
+
+    } else if (command == "unsubscribe") {
+      if (subscribers_.erase(from)) {
+        Info() << "Server: unsubscribed: " << from << std::endl;
       }
     } else if (command == "list") {
       // TODO handle in worker threat
